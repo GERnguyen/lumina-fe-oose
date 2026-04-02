@@ -319,6 +319,13 @@ const courseService = {
     return normalizeCourse(response);
   },
 
+  async getInstructorCourseDetail(id: number | string): Promise<Course> {
+    const response = await axiosClient.get<ApiCourse, ApiCourse>(
+      `/instructor/courses/${id}/detail`,
+    );
+    return normalizeCourse(response);
+  },
+
   async getBestSellers(): Promise<Course[]> {
     const response = await axiosClient.get<ApiCourse[], ApiCourse[]>(
       "/courses/best-sellers",

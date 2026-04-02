@@ -45,7 +45,11 @@ export default function SignIn() {
       setAuth(response.user, response.accessToken);
 
       // Chuyển hướng dựa trên role
-      if (response.user.role === "instructor") {
+      const normalizedRole = response.user.role?.trim().toLowerCase();
+
+      if (normalizedRole === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (normalizedRole === "instructor") {
         navigate("/instructor/courses", { replace: true });
       } else {
         navigate("/student", { replace: true });

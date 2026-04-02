@@ -16,6 +16,7 @@ import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import BasicInformation from "./pages/instructor/CreateCourseBasic";
@@ -70,6 +71,14 @@ function App() {
             }
           />
           <Route path="/learning/course/:courseId" element={<WatchCourse />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/instructor" element={<InstructorLayout />}>
             <Route index element={<Navigate to="courses" replace />} />
             <Route path="courses" element={<InstructorMyCourses />} />

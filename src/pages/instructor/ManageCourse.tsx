@@ -91,7 +91,7 @@ export default function ManageCourse() {
 
   const courseQuery = useQuery({
     queryKey: ["instructor", "course-detail", numericCourseId],
-    queryFn: () => courseService.getCourseDetail(numericCourseId),
+    queryFn: () => courseService.getInstructorCourseDetail(numericCourseId),
     enabled: Number.isFinite(numericCourseId) && numericCourseId > 0,
   });
 

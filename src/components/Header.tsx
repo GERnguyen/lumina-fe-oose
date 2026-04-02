@@ -40,6 +40,19 @@ export default function Header() {
     () => cart?.items.reduce((total, item) => total + item.quantity, 0) ?? 0,
     [cart],
   );
+  const normalizedRole = user?.role?.trim().toLowerCase();
+  const dashboardTo =
+    normalizedRole === "admin"
+      ? "/admin"
+      : normalizedRole === "instructor"
+        ? "/instructor/courses"
+        : "/student";
+  const dashboardLabel =
+    normalizedRole === "admin"
+      ? "Admin Dashboard"
+      : normalizedRole === "instructor"
+        ? "Instructor Dashboard"
+        : "Student Dashboard";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -154,13 +167,13 @@ export default function Header() {
                   </div>
 
                   <Link
-                    to="/student"
+                    to={dashboardTo}
                     role="menuitem"
                     onClick={() => setIsUserMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-neutral-800"
                   >
                     <LayoutDashboard className="h-4 w-4" />
-                    Student Dashboard
+                    {dashboardLabel}
                   </Link>
 
                   <button
