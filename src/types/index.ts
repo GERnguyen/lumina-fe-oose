@@ -50,6 +50,37 @@ export interface Question {
   answers: Answer[];
 }
 
+export interface QuizAnswer {
+  id: number;
+  content: string;
+  orderIndex: number;
+}
+
+export interface QuizQuestion {
+  id: number;
+  content: string;
+  orderIndex: number;
+  answers: QuizAnswer[];
+}
+
+export interface QuizDetail {
+  id: number;
+  title: string;
+  description?: string;
+  orderIndex: number;
+  questions: QuizQuestion[];
+}
+
+export interface QuizSubmissionPayload {
+  selectedAnswerIds: number[];
+}
+
+export interface QuizSubmissionResult {
+  totalQuestions: number;
+  correctAnswers: number;
+  score: number;
+}
+
 export interface Quiz {
   id: number;
   title: string;
@@ -144,6 +175,13 @@ export interface RegisterPayload {
   fullName: string;
   otp: string;
   role?: "student" | "instructor";
+}
+
+export type OtpPurpose = "REGISTER" | "FORGOT_PASSWORD" | "UPDATE_PROFILE";
+
+export interface SendOtpPayload {
+  email: string;
+  purpose: OtpPurpose;
 }
 
 export interface LoginResponse {

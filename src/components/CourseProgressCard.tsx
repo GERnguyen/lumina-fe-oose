@@ -1,7 +1,9 @@
+import { useNavigate } from "react-router-dom";
 import Button from "./ui/Button";
 import { cn } from "../utils/cn";
 
 export interface CourseProgressCardProps {
+  courseId?: number;
   imageUrl: string;
   courseTitle: string;
   currentLecture: string;
@@ -9,17 +11,41 @@ export interface CourseProgressCardProps {
 }
 
 export default function CourseProgressCard({
+  courseId,
   imageUrl,
   courseTitle,
   currentLecture,
   progressPercentage,
 }: CourseProgressCardProps) {
+  const navigate = useNavigate();
   const safeProgress = Math.max(0, Math.min(100, progressPercentage));
   const isNotStarted = safeProgress === 0;
   const isComplete = safeProgress >= 100;
+  const canNavigate = typeof courseId === "number" && courseId > 0;
+
+  const handleNavigate = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    navigate(`/learning/course/${courseId}`);
+  };
+
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleNavigate();
+    }
+  };
 
   return (
-    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg">
+    <article
+      className="overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-lg"
+      role={canNavigate ? "link" : undefined}
+      tabIndex={canNavigate ? 0 : undefined}
+      onClick={handleNavigate}
+      onKeyDown={canNavigate ? handleCardKeyDown : undefined}
+    >
       <img
         src={imageUrl}
         alt={courseTitle}
@@ -40,8 +66,12 @@ export default function CourseProgressCard({
             colorScheme={isNotStarted ? "primary" : "primary"}
             variant={isNotStarted ? "outline" : "solid"}
             className={cn(!isNotStarted && "bg-primary-500 text-white")}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleNavigate();
+            }}
           >
-            Watch Lecture
+            Continue learning
           </Button>
 
           <p className="text-sm font-medium text-success-600">

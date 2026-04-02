@@ -1,10 +1,10 @@
-import { ChevronDown, FileText, PlayCircle } from "lucide-react";
+import { ChevronDown, FileText, PlayCircle, HelpCircle } from "lucide-react";
 import { useState } from "react";
+import type { CourseSection } from "../types/course";
 import { cn } from "../utils/cn";
-import type { CurriculumSection } from "../data/courseDetail.mock";
 
 export interface CurriculumAccordionProps {
-  section: CurriculumSection;
+  section: CourseSection;
   defaultOpen?: boolean;
 }
 
@@ -26,7 +26,8 @@ export default function CurriculumAccordion({
             {section.title}
           </h3>
           <p className="mt-1 text-sm text-gray-600">
-            {section.lectures} lectures • {section.duration}
+            {(section.lectures?.length ?? 0) + (section.quizzes?.length ?? 0)}{" "}
+            items
           </p>
         </div>
 
@@ -41,49 +42,51 @@ export default function CurriculumAccordion({
       {isOpen ? (
         <div className="border-t border-gray-200 px-5 py-4">
           <div className="space-y-3">
-            {section.items.map((item) => {
-              const Icon = item.isFile ? FileText : PlayCircle;
+            {(section.lectures ?? []).map((lecture) => {
+              const Icon = lecture.videoUrl ? PlayCircle : FileText;
 
               return (
                 <div
-                  key={item.title}
+                  key={lecture.id}
                   className={cn(
                     "flex items-center justify-between gap-4 rounded-lg px-3 py-2 transition",
-                    item.active ? "bg-primary-50" : "bg-white hover:bg-gray-50",
+                    "bg-white hover:bg-gray-50",
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <Icon
-                      className={cn(
-                        "h-5 w-5 shrink-0",
-                        item.active ? "text-primary-500" : "text-gray-400",
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "truncate text-sm",
-                        item.active
-                          ? "font-medium text-primary-600"
-                          : "font-normal text-gray-600",
-                      )}
-                    >
-                      {item.title}
+                    <Icon className="h-5 w-5 shrink-0 text-gray-400" />
+                    <span className="truncate text-sm font-normal text-gray-600">
+                      {lecture.title}
                     </span>
                   </div>
 
-                  <span
-                    className={cn(
-                      "shrink-0 text-sm",
-                      item.active
-                        ? "font-medium text-primary-500"
-                        : "font-normal text-gray-400",
-                    )}
-                  >
-                    {item.duration}
+                  <span className="shrink-0 text-sm font-normal text-gray-400">
+                    Lecture {lecture.orderIndex}
                   </span>
                 </div>
               );
             })}
+
+            {(section.quizzes ?? []).map((quiz) => (
+              <div
+                key={quiz.id}
+                className={cn(
+                  "flex items-center justify-between gap-4 rounded-lg px-3 py-2 transition",
+                  "bg-white hover:bg-gray-50",
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <HelpCircle className="h-5 w-5 shrink-0 text-gray-400" />
+                  <span className="truncate text-sm font-normal text-gray-600">
+                    {quiz.title}
+                  </span>
+                </div>
+
+                <span className="shrink-0 text-sm font-normal text-gray-400">
+                  Quiz {quiz.orderIndex}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}

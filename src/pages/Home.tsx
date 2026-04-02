@@ -2,92 +2,47 @@ import {
   Briefcase,
   Dumbbell,
   GraduationCap,
+  type LucideIcon,
   Monitor,
   Palette,
   PlayCircle,
 } from "lucide-react";
-import CategoryCard, {
-  type CategoryCardProps,
-} from "../components/CategoryCard";
-import CourseCard, { type CourseCardProps } from "../components/CourseCard";
+import { useMemo } from "react";
+import { Link, Navigate } from "react-router-dom";
+import CategoryCard from "../components/CategoryCard";
+import CourseCard from "../components/CourseCard";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Button from "../components/ui/Button";
+import {
+  useCategories,
+  useBestSellers,
+  useTopDiscounted,
+  useCart,
+} from "../hooks/queries";
+import { useAuth } from "../hooks/useAuth";
+import type { Course } from "../types/course";
 
-const categories: CategoryCardProps[] = [
-  { icon: Monitor, name: "Development", courseCount: 63476, tone: "secondary" },
-  { icon: Briefcase, name: "Business", courseCount: 52822, tone: "success" },
-  { icon: Palette, name: "Design", courseCount: 22649, tone: "warning" },
-  {
-    icon: Dumbbell,
-    name: "Health & Fitness",
-    courseCount: 1678,
-    tone: "success",
-  },
-  {
-    icon: GraduationCap,
-    name: "Productivity",
-    courseCount: 13932,
-    tone: "gray",
-  },
-  {
-    icon: PlayCircle,
-    name: "Photography & Video",
-    courseCount: 6196,
-    tone: "primary",
-  },
-];
+// Mapping category names to icons
+const categoryIconMap: Record<string, LucideIcon> = {
+  development: Monitor,
+  business: Briefcase,
+  design: Palette,
+  "health & fitness": Dumbbell,
+  productivity: GraduationCap,
+  photography: PlayCircle,
+};
 
-const featuredCourses: CourseCardProps[] = [
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop",
-    title: "Complete Python Bootcamp: From Zero to Hero",
-    category: "Development",
-    categoryTone: "secondary",
-    price: 14,
-    originalPrice: 26,
-    rating: 5,
-    students: 265700,
-    author: "Kevin Gilbert",
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=1200&auto=format&fit=crop",
-    title: "The Complete Web Development Bootcamp",
-    category: "IT & Software",
-    categoryTone: "danger",
-    price: 19,
-    originalPrice: 39,
-    rating: 4.9,
-    students: 198200,
-    author: "Darrell Steward",
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop",
-    title: "Digital Marketing Mastery 2026",
-    category: "Marketing",
-    categoryTone: "primary",
-    price: 17,
-    originalPrice: 31,
-    rating: 4.8,
-    students: 152340,
-    author: "Jane Cooper",
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
-    title: "Machine Learning A-Z with Python",
-    category: "Business",
-    categoryTone: "success",
-    price: 21,
-    originalPrice: 49,
-    rating: 4.7,
-    students: 99050,
-    author: "Albert Flores",
-  },
-];
+// Loading skeleton component
+function CourseSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-4 h-40 rounded-lg bg-gray-200" />
+      <div className="mb-2 h-4 rounded bg-gray-200" />
+      <div className="h-3 w-3/4 rounded bg-gray-200" />
+    </div>
+  );
+}
 
 function HeroSection() {
   return (
@@ -102,12 +57,16 @@ function HeroSection() {
             practical skills to grow their careers.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button colorScheme="primary" size="lg">
-              Create account
-            </Button>
-            <Button variant="outline" colorScheme="gray" size="lg">
-              Explore courses
-            </Button>
+            <Link to="/sign-in">
+              <Button colorScheme="primary" size="lg">
+                Create account
+              </Button>
+            </Link>
+            <Link to="/courses">
+              <Button variant="outline" colorScheme="gray" size="lg">
+                Explore courses
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -126,34 +85,14 @@ function HeroSection() {
 function SponsorsSection() {
   return (
     <section className="bg-white py-16">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <div className="space-y-3">
-          <h2 className="text-3xl font-semibold text-neutral-800">
-            6.3k trusted companies
-          </h2>
-          <p className="max-w-md text-sm text-gray-600">
-            Top organizations trust Cinx to train teams with job-ready online
-            learning experiences.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {["Netflix", "Slack", "Google", "Lenovo", "Microsoft", "YouTube"].map(
-            (brand) => (
-              <div
-                key={brand}
-                className="flex h-20 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-500 shadow-sm"
-              >
-                {brand}
-              </div>
-            ),
-          )}
-        </div>
-      </div>
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8"></div>
     </section>
   );
 }
 
 function TopCategoriesSection() {
+  const { data: categoriesData, isLoading } = useCategories();
+
   return (
     <section className="bg-white py-16">
       <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
@@ -167,9 +106,47 @@ function TopCategoriesSection() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <CategoryCard key={category.name} {...category} />
-          ))}
+          {isLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-32 rounded-lg bg-gray-200" />
+                </div>
+              ))
+            : categoriesData?.map((category) => {
+                const iconName = category.name.toLowerCase();
+                const icon =
+                  categoryIconMap[iconName] || categoryIconMap.development;
+                const toneMap: Record<string, string> = {
+                  development: "secondary",
+                  business: "success",
+                  design: "warning",
+                  health: "success",
+                  productivity: "gray",
+                  photography: "primary",
+                };
+                const tone =
+                  (toneMap[iconName] as
+                    | "secondary"
+                    | "success"
+                    | "warning"
+                    | "gray"
+                    | "primary") || "secondary";
+
+                return (
+                  <Link
+                    key={category.id}
+                    to={`/courses?categoryId=${category.id}`}
+                    className="block outline-none transition focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                  >
+                    <CategoryCard
+                      icon={icon}
+                      name={category.name}
+                      courseCount={category.courseCount ?? 0}
+                      tone={tone}
+                    />
+                  </Link>
+                );
+              })}
         </div>
       </div>
     </section>
@@ -177,23 +154,60 @@ function TopCategoriesSection() {
 }
 
 function FeaturedCoursesSection() {
+  const { data: bestSellers, isLoading: isLoadingBestSellers } =
+    useBestSellers();
+  const { data: topDiscounted, isLoading: isLoadingTopDiscounted } =
+    useTopDiscounted();
+  const { isAuthenticated } = useAuth();
+  const { data: cartData } = useCart(isAuthenticated);
+  const cartCourseIds = useMemo(
+    () => (cartData?.items ?? []).map((item) => item.courseId),
+    [cartData],
+  );
+
   return (
     <section className="bg-slate-50 py-16">
       <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+        <div className="space-y-4">
           <h2 className="text-4xl font-semibold text-neutral-800">
-            Our featured courses
+            Khóa học bán chạy
           </h2>
-          <p className="max-w-md text-sm text-gray-600">
-            Curated picks from high-rated instructors to help you level up your
-            skills and portfolio.
-          </p>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {isLoadingBestSellers
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <CourseSkeleton key={`best-loading-${i}`} />
+                ))
+              : (bestSellers ?? []).slice(0, 4).map((course: Course) => (
+                  <div key={course.id} className="block h-full">
+                    <CourseCard
+                      course={course}
+                      categoryTone="secondary"
+                      cartCourseIds={cartCourseIds}
+                    />
+                  </div>
+                ))}
+          </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {featuredCourses.map((course) => (
-            <CourseCard key={course.title} {...course} />
-          ))}
+        <div className="space-y-4">
+          <h2 className="text-4xl font-semibold text-neutral-800">
+            Khóa học đang giảm giá
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {isLoadingTopDiscounted
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <CourseSkeleton key={`discount-loading-${i}`} />
+                ))
+              : (topDiscounted ?? []).slice(0, 4).map((course: Course) => (
+                  <div key={course.id} className="block h-full">
+                    <CourseCard
+                      course={course}
+                      categoryTone="warning"
+                      cartCourseIds={cartCourseIds}
+                    />
+                  </div>
+                ))}
+          </div>
         </div>
       </div>
     </section>
@@ -252,6 +266,12 @@ function InstructorCTASection() {
 }
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/student" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-800">
       <Header />

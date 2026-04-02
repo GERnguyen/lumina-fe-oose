@@ -1,9 +1,81 @@
-import { Apple, ArrowRight, EyeOff, Globe, Users } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import AuthHeader from "../../components/AuthHeader";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import authService from "../../services/auth.service";
+import { useAuthStore } from "../../stores/useAuthStore";
+import type { LoginCredentials } from "../../types";
+
+// Validation schema với Zod
+const signInSchema = z.object({
+  email: z.string().email("Email không hợp lệ"),
+  password: z.string().min(1, "Mật khẩu không được để trống"),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  // Setup form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+  });
+
+  // Setup mutation
+  const { mutate: login, isPending } = useMutation({
+    mutationFn: (credentials: LoginCredentials) =>
+      authService.login(credentials),
+    onSuccess: (response) => {
+      setErrorMessage("");
+      // Lưu auth state
+      setAuth(response.user, response.accessToken);
+
+      // Chuyển hướng dựa trên role
+      if (response.user.role === "instructor") {
+        navigate("/instructor/courses", { replace: true });
+      } else {
+        navigate("/student", { replace: true });
+      }
+    },
+    onError: (error: unknown) => {
+      const fallbackMessage = "Login failed. Please check your credentials.";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as { response?: unknown }).response === "object" &&
+        (error as { response?: { data?: { message?: string } } }).response
+      ) {
+        const message = (
+          error as { response?: { data?: { message?: string } } }
+        ).response?.data?.message;
+        setErrorMessage(message || fallbackMessage);
+        return;
+      }
+
+      setErrorMessage(fallbackMessage);
+    },
+  });
+
+  // Handle form submission
+  const onSubmit = (data: SignInFormValues) => {
+    login(data);
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-800">
       <AuthHeader
@@ -12,35 +84,47 @@ export default function SignIn() {
         actionTo="/register"
       />
 
-      <main className="grid min-h-[calc(100vh-73px)] grid-cols-1 lg:grid-cols-2">
-        <section className="relative hidden lg:block">
-          <div className="absolute inset-0 bg-violet-100" />
-          <img
-            src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1600&auto=format&fit=crop"
-            alt="Team working together"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-tr from-violet-900/25 to-transparent" />
-        </section>
-
-        <section className="flex items-center justify-center p-6 sm:p-8 lg:p-12">
-          <div className="w-full max-w-2xl space-y-8">
+      <main className="flex min-h-[calc(100vh-73px)] items-center justify-center p-6 sm:p-8 lg:p-12">
+        <section className="w-full max-w-2xl">
+          <div className="space-y-8">
             <h1 className="text-center text-3xl font-semibold leading-tight text-neutral-800 sm:text-4xl">
               Sign in to your account
             </h1>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              {errorMessage ? (
+                <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
+                  {errorMessage}
+                </div>
+              ) : null}
+
               <Input
                 label="Email"
                 type="email"
                 placeholder="Username or email address..."
+                {...register("email")}
+                error={errors.email?.message}
               />
 
               <Input
                 label="Password"
-                type="password"
+                type={isPasswordVisible ? "text" : "password"}
                 placeholder="Password"
-                rightIcon={<EyeOff className="h-5 w-5 text-gray-400" />}
+                rightIcon={
+                  isPasswordVisible ? (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  )
+                }
+                onRightIconClick={() =>
+                  setIsPasswordVisible((visible) => !visible)
+                }
+                rightIconAriaLabel={
+                  isPasswordVisible ? "Hide password" : "Show password"
+                }
+                {...register("password")}
+                error={errors.password?.message}
               />
 
               <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -52,34 +136,41 @@ export default function SignIn() {
                   Remember me
                 </label>
 
-                <Button colorScheme="primary" className="w-full sm:w-auto">
-                  Sign In
-                  <ArrowRight className="h-4 w-4" />
+                <Button
+                  type="submit"
+                  colorScheme="primary"
+                  className="w-full sm:w-auto"
+                  disabled={isPending}
+                >
+                  {isPending ? "Signing In..." : "Sign In"}
+                  {!isPending && <ArrowRight className="h-4 w-4" />}
                 </Button>
               </div>
             </form>
 
-            <div className="space-y-5">
-              <div className="relative">
-                <div className="h-px w-full bg-gray-200" />
-                <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  Sign in with
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <Button variant="outline" colorScheme="gray" className="w-full">
-                  <Globe className="h-4 w-4" />
-                  Google
-                </Button>
-                <Button variant="outline" colorScheme="gray" className="w-full">
-                  <Users className="h-4 w-4" />
-                  Facebook
-                </Button>
-                <Button variant="outline" colorScheme="gray" className="w-full">
-                  <Apple className="h-4 w-4" />
-                  Apple
-                </Button>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm font-medium text-neutral-800">
+                New to Cinx? Choose how you want to register
+              </p>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Link to="/register?role=student" className="block">
+                  <Button
+                    variant="outline"
+                    colorScheme="primary"
+                    className="w-full"
+                  >
+                    Register as Student
+                  </Button>
+                </Link>
+                <Link to="/register?role=instructor" className="block">
+                  <Button
+                    variant="outline"
+                    colorScheme="secondary"
+                    className="w-full"
+                  >
+                    Register as Instructor
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

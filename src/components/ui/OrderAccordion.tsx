@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../../utils/cn";
+import { formatCurrencyVnd } from "../../utils/price";
 
 export interface OrderCourseItem {
   id: string;
@@ -58,7 +59,7 @@ export default function OrderAccordion({
             </div>
             <div className="inline-flex items-center gap-1.5 text-gray-600">
               <DollarSign className="h-4 w-4 text-success-600" />
-              <span>${order.totalAmount.toFixed(2)}</span>
+              <span>{formatCurrencyVnd(order.totalAmount)}</span>
             </div>
             <div className="inline-flex items-center gap-1.5 text-gray-600">
               <CreditCard className="h-4 w-4 text-primary-500" />
@@ -81,8 +82,8 @@ export default function OrderAccordion({
         <div className="space-y-5 border-t border-gray-200 px-5 pb-5 pt-4">
           <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
             <p>
-              <span className="font-medium text-neutral-800">Amount:</span> $
-              {order.totalAmount.toFixed(2)}
+              <span className="font-medium text-neutral-800">Amount:</span>{" "}
+              {formatCurrencyVnd(order.totalAmount)}
             </p>
             <p className="mt-1">
               <span className="font-medium text-neutral-800">Payment:</span>{" "}
@@ -117,7 +118,7 @@ export default function OrderAccordion({
                     {course.author}
                   </p>
                   <p className="text-sm font-semibold text-primary-500">
-                    ${course.price.toFixed(2)}
+                    {formatCurrencyVnd(course.price)}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ChevronDown, Filter, Search, Star, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import type { ChangeEvent } from "react";
+import { Filter, Search, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import CourseCard from "../components/CourseCard";
 import FilterAccordion from "../components/FilterAccordion";
 import Footer from "../components/Footer";
@@ -9,128 +10,130 @@ import Button from "../components/ui/Button";
 import Checkbox from "../components/ui/Checkbox";
 import Input from "../components/ui/Input";
 import Pagination from "../components/ui/Pagination";
-import {
-  categoryOptions,
-  courses,
-  durationOptions,
-  levelOptions,
-  ratingOptions,
-  suggestionTags,
-  toolOptions,
-  type FilterOption,
-} from "../data/courses.mock";
+import { useCourses, useCategories, useCart } from "../hooks/queries";
+import { useAuth } from "../hooks/useAuth";
+import type { CourseListParams } from "../types/course";
+import type { Course } from "../types/course";
 
-type FilterGroup = "category" | "tools" | "rating" | "level" | "duration";
-
-const filterGroupTitles: Record<FilterGroup, string> = {
-  category: "Category",
-  tools: "Tools",
-  rating: "Rating",
-  level: "Course Level",
-  duration: "Duration",
-};
-
-const filterGroups: Record<FilterGroup, FilterOption[]> = {
-  category: categoryOptions,
-  tools: toolOptions,
-  rating: ratingOptions,
-  level: levelOptions,
-  duration: durationOptions,
-};
-
-const initialSelectedFilters: Record<FilterGroup, Record<string, boolean>> = {
-  category: Object.fromEntries(
-    categoryOptions.map((option) => [option.label, Boolean(option.checked)]),
-  ),
-  tools: Object.fromEntries(
-    toolOptions.map((option) => [option.label, Boolean(option.checked)]),
-  ),
-  rating: Object.fromEntries(
-    ratingOptions.map((option) => [option.label, Boolean(option.checked)]),
-  ),
-  level: Object.fromEntries(
-    levelOptions.map((option) => [option.label, Boolean(option.checked)]),
-  ),
-  duration: Object.fromEntries(
-    durationOptions.map((option) => [option.label, Boolean(option.checked)]),
-  ),
-};
+function CourseSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-4 h-40 rounded-lg bg-gray-200" />
+      <div className="mb-2 h-4 rounded bg-gray-200" />
+      <div className="h-3 w-3/4 rounded bg-gray-200" />
+    </div>
+  );
+}
 
 export default function Courses() {
-  const [currentPage, setCurrentPage] = useState(2);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState(
-    initialSelectedFilters,
-  );
+  const { isAuthenticated } = useAuth();
+  const { data: cartData } = useCart(isAuthenticated);
 
-  const totalPages = 5;
-  const pagedCourses = courses;
+  // Extract URL params
+  const keyword = searchParams.get("keyword") || "";
+  const categoryId = searchParams.get("categoryId");
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = 12;
+  const sortBy = searchParams.get("sortBy") || "best_seller";
 
-  const activeFilterCount = Object.values(selectedFilters).reduce(
-    (groupTotal, group) =>
-      groupTotal + Object.values(group).filter(Boolean).length,
+  // Build query params
+  const queryParams: CourseListParams = {
+    keyword: keyword || undefined,
+    categoryId: categoryId ? parseInt(categoryId, 10) : undefined,
+    page,
+    limit,
+    sortBy: sortBy as
+      | "best_seller"
+      | "newest"
+      | "price_asc"
+      | "price_desc"
+      | "top_rated",
+  };
+
+  // Fetch data
+  const { data: coursesResponse, isLoading: isLoadingCourses } =
+    useCourses(queryParams);
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
+  const cartCourseIds = (cartData?.items ?? []).map((item) => item.courseId);
+
+  // Handler functions
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("keyword", e.target.value);
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+
+  const handleCategoryChange = (catId: number | null) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (catId) {
+      newParams.set("categoryId", catId.toString());
+    } else {
+      newParams.delete("categoryId");
+    }
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+
+  const handleSortChange = (
+    sortValue:
+      | "best_seller"
+      | "newest"
+      | "price_asc"
+      | "price_desc"
+      | "top_rated",
+  ) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("sortBy", sortValue);
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", newPage.toString());
+    setSearchParams(newParams);
+  };
+
+  const activeFilterCount = [categoryId ? 1 : 0, keyword ? 1 : 0].reduce(
+    (a, b) => a + b,
     0,
   );
 
-  const handleCheckboxChange = (
-    group: FilterGroup,
-    label: string,
-    checked: boolean,
-  ) => {
-    setSelectedFilters((current) => ({
-      ...current,
-      [group]: {
-        ...current[group],
-        [label]: checked,
-      },
-    }));
-  };
+  const totalCategoryCourses = (categories ?? []).reduce(
+    (sum, category) => sum + (category.courseCount ?? 0),
+    0,
+  );
 
-  const renderFilterGroup = (group: FilterGroup) => {
-    const options = filterGroups[group];
-
-    return (
-      <FilterAccordion key={group} title={filterGroupTitles[group]}>
-        {options.map((option) => (
-          <Checkbox
-            key={option.label}
-            label={option.label}
-            count={option.count}
-            checked={selectedFilters[group][option.label]}
-            onChange={(checked) =>
-              handleCheckboxChange(group, option.label, checked)
-            }
-          />
-        ))}
-      </FilterAccordion>
-    );
-  };
-
-  const filterSections = (
+  const renderFilterSection = () => (
     <div className="space-y-4">
-      {renderFilterGroup("category")}
-      {renderFilterGroup("tools")}
-
-      <FilterAccordion title="Rating">
-        {ratingOptions.map((option) => (
-          <div key={option.label} className="flex items-center gap-2">
-            <div className="min-w-0 flex-1">
+      <FilterAccordion title="Category">
+        <Checkbox
+          label="All Categories"
+          count={totalCategoryCourses}
+          checked={!categoryId}
+          onChange={() => handleCategoryChange(null)}
+        />
+        {isLoadingCategories
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-4 animate-pulse rounded bg-gray-200" />
+            ))
+          : categories?.map((cat) => (
               <Checkbox
-                label={option.label}
-                count={option.count}
-                checked={selectedFilters.rating[option.label]}
-                onChange={(checked) =>
-                  handleCheckboxChange("rating", option.label, checked)
+                key={cat.id}
+                label={cat.name}
+                count={cat.courseCount ?? 0}
+                checked={categoryId === cat.id.toString()}
+                onChange={() =>
+                  handleCategoryChange(
+                    categoryId === cat.id.toString() ? null : cat.id,
+                  )
                 }
               />
-            </div>
-            <Star className="h-4 w-4 fill-warning-500 text-warning-500" />
-          </div>
-        ))}
+            ))}
       </FilterAccordion>
-
-      {renderFilterGroup("level")}
-      {renderFilterGroup("duration")}
     </div>
   );
 
@@ -176,7 +179,9 @@ export default function Courses() {
 
                 <div className="w-full max-w-xl">
                   <Input
-                    defaultValue="UI/UX Design"
+                    placeholder="Search courses..."
+                    value={keyword}
+                    onChange={handleSearchChange}
                     leftIcon={<Search className="h-4 w-4" />}
                   />
                 </div>
@@ -184,36 +189,37 @@ export default function Courses() {
 
               <div className="flex items-center gap-4">
                 <p className="text-sm text-gray-600">Sort by:</p>
-                <button
-                  type="button"
+                <select
+                  value={sortBy}
+                  onChange={(e) =>
+                    handleSortChange(
+                      e.target.value as
+                        | "best_seller"
+                        | "newest"
+                        | "price_asc"
+                        | "price_desc"
+                        | "top_rated",
+                    )
+                  }
                   className="inline-flex h-12 items-center justify-between gap-8 rounded-lg border border-gray-200 px-4 text-gray-700"
                 >
-                  Trending
-                  <ChevronDown className="h-4 w-4 text-neutral-800" />
-                </button>
+                  <option value="best_seller">Best Seller</option>
+                  <option value="newest">Newest</option>
+                  <option value="top_rated">Top Rated</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                </select>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 pt-1 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-neutral-800">Suggestion:</span>
-                {suggestionTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="text-primary-500 transition hover:text-primary-600"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
               <p className="text-sm">
                 <span className="font-semibold text-neutral-800">
-                  3,145,684{" "}
+                  {coursesResponse?.total || 0}{" "}
                 </span>
                 <span className="text-gray-600">
-                  results found for "ui/ux design"
+                  results found
+                  {keyword ? ` for "${keyword}"` : ""}
                 </span>
               </p>
             </div>
@@ -221,27 +227,33 @@ export default function Courses() {
 
           <section className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             <aside className="hidden space-y-4 lg:col-span-1 lg:block">
-              {filterSections}
+              {renderFilterSection()}
             </aside>
 
             <div className="space-y-8 lg:col-span-3">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {pagedCourses.map((course) => (
-                  <Link
-                    key={course.id}
-                    to={`/courses/${course.id}`}
-                    className="block outline-none transition focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-                  >
-                    <CourseCard {...course} />
-                  </Link>
-                ))}
+                {isLoadingCourses
+                  ? Array.from({ length: limit }).map((_, i) => (
+                      <CourseSkeleton key={i} />
+                    ))
+                  : coursesResponse?.data?.map((course: Course) => (
+                      <div key={course.id} className="block h-full">
+                        <CourseCard
+                          course={course}
+                          categoryTone="secondary"
+                          cartCourseIds={cartCourseIds}
+                        />
+                      </div>
+                    ))}
               </div>
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              {coursesResponse && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={Math.ceil(coursesResponse.total / limit)}
+                  onPageChange={handlePageChange}
+                />
+              )}
             </div>
           </section>
         </div>
@@ -277,7 +289,7 @@ export default function Courses() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-5">
-              {filterSections}
+              {renderFilterSection()}
             </div>
 
             <div className="border-t border-gray-200 px-4 py-4">

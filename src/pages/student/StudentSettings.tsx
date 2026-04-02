@@ -1,63 +1,265 @@
-import { EyeOff, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Alert, { type AlertVariant } from "../../components/ui/Alert";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import authService from "../../services/auth.service";
+import { useAuth } from "../../hooks/useAuth";
+
+interface ToastState {
+  variant: AlertVariant;
+  message: string;
+}
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data
+  ) {
+    const message = (error.response as { data?: { message?: unknown } }).data
+      ?.message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export default function StudentSettings() {
+  const queryClient = useQueryClient();
+  const { token, setAuth } = useAuth();
+
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const [fullName, setFullName] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const [bio, setBio] = useState("");
+
+  const [newPassword, setNewPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const profileQuery = useQuery({
+    queryKey: ["users", "me"],
+    queryFn: () => authService.getProfile(),
+  });
+
+  useEffect(() => {
+    const me = profileQuery.data;
+    if (!me) {
+      return;
+    }
+
+    setFullName(me.profile?.fullName ?? "");
+    setAvatar(me.profile?.avatar ?? "");
+    setBio(me.profile?.bio ?? "");
+  }, [profileQuery.data]);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setToast(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [toast]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: () =>
+      authService.updateProfile({
+        fullName,
+        avatar,
+        bio,
+      }),
+    onSuccess: async (updatedUser) => {
+      if (token) {
+        setAuth(updatedUser, token);
+      }
+
+      setToast({
+        variant: "success",
+        message: "Profile updated successfully.",
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["users", "me"] });
+    },
+    onError: (error) => {
+      setToast({
+        variant: "error",
+        message: extractErrorMessage(error, "Failed to update profile."),
+      });
+    },
+  });
+
+  const sendOtpMutation = useMutation({
+    mutationFn: () => authService.sendUpdateOtp(),
+    onSuccess: (response) => {
+      setIsOtpModalOpen(true);
+      setToast({
+        variant: "success",
+        message: response.message || "OTP sent successfully.",
+      });
+    },
+    onError: (error) => {
+      setToast({
+        variant: "error",
+        message: extractErrorMessage(error, "Failed to send OTP."),
+      });
+    },
+  });
+
+  const updateSensitiveMutation = useMutation({
+    mutationFn: () => {
+      const trimmedPassword = newPassword.trim();
+
+      return authService.updateSensitive({
+        otp: otp.trim(),
+        newPassword: trimmedPassword || undefined,
+      });
+    },
+    onSuccess: async (updatedUser) => {
+      if (token) {
+        setAuth(updatedUser, token);
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setOtp("");
+      setIsOtpModalOpen(false);
+
+      setToast({
+        variant: "success",
+        message: "Sensitive information updated successfully.",
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ["users", "me"] });
+    },
+    onError: (error) => {
+      setToast({
+        variant: "error",
+        message: extractErrorMessage(
+          error,
+          "Failed to update sensitive information.",
+        ),
+      });
+    },
+  });
+
+  const handleUpdateProfile = () => {
+    updateProfileMutation.mutate();
+  };
+
+  const handleUpdateSensitive = () => {
+    const trimmedPassword = newPassword.trim();
+
+    if (!otp.trim()) {
+      setToast({
+        variant: "warning",
+        message: "Please enter OTP.",
+      });
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      setToast({
+        variant: "warning",
+        message: "New password and confirm password do not match.",
+      });
+      return;
+    }
+
+    if (!trimmedPassword) {
+      setToast({
+        variant: "warning",
+        message: "Please enter new password.",
+      });
+      return;
+    }
+
+    updateSensitiveMutation.mutate();
+  };
+
   return (
     <section className="space-y-10">
+      {toast ? (
+        <div className="fixed right-4 top-4 z-50 w-[min(92vw,460px)]">
+          <Alert
+            variant={toast.variant}
+            message={toast.message}
+            onClose={() => setToast(null)}
+          />
+        </div>
+      ) : null}
+
       <h2 className="text-2xl font-semibold text-neutral-800">
         Account settings
       </h2>
 
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start">
-        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
-          <div className="relative overflow-hidden rounded-lg">
-            <img
-              src="https://placehold.co/560x560"
-              alt="Profile avatar"
-              className="aspect-square w-full object-cover"
-            />
-
-            <div className="absolute inset-x-0 bottom-0 bg-black/50 p-3">
-              <Button
-                variant="ghost"
-                colorScheme="gray"
-                className="h-auto w-full justify-center rounded-none px-0 py-0 text-white hover:bg-transparent"
-              >
-                <Upload className="h-4 w-4" />
-                Upload Photo
-              </Button>
-            </div>
-          </div>
-
-          <p className="mt-4 text-center text-sm text-gray-500">
-            Image size should be under 1MB and image ratio needs to be 1:1
-          </p>
-        </div>
-
         <div className="w-full max-w-4xl space-y-5">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <Input label="First name" placeholder="First name" />
-            <Input label="Last name" placeholder="Last name" />
-          </div>
-
-          <Input label="Username" placeholder="Enter your username" />
-          <Input label="Email" placeholder="Email address" type="email" />
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-sm font-medium text-neutral-800">
-                Title
-              </label>
-              <span className="text-sm text-gray-600">0/50</span>
+          {profileQuery.isLoading ? (
+            <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-600">
+              Loading profile...
             </div>
-            <Input
-              placeholder="Your title, profession or small biography"
-              maxLength={50}
-            />
-          </div>
+          ) : null}
 
-          <Button colorScheme="primary" size="md">
+          {profileQuery.isError ? (
+            <div className="rounded-xl border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700">
+              Unable to load profile information.
+            </div>
+          ) : null}
+
+          <Input
+            label="Username"
+            placeholder="Enter your username"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+          />
+
+          <Input
+            label="Avatar URL"
+            placeholder="https://..."
+            value={avatar}
+            onChange={(event) => setAvatar(event.target.value)}
+          />
+
+          <Input
+            label="Bio"
+            placeholder="Tell us something about you"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+          />
+
+          <Button
+            colorScheme="primary"
+            size="md"
+            isLoading={updateProfileMutation.isPending}
+            onClick={handleUpdateProfile}
+          >
             Save changes
           </Button>
         </div>
@@ -65,34 +267,121 @@ export default function StudentSettings() {
 
       <hr className="my-10 border-gray-200" />
 
-      <div className="w-full max-w-xl space-y-5">
+      <div className="w-full max-w-4xl space-y-5">
         <h3 className="text-2xl font-semibold text-neutral-800">
-          Change password
+          Change password (OTP required)
         </h3>
 
-        <Input
-          label="Current Password"
-          type="password"
-          placeholder="Password"
-          rightIcon={<EyeOff className="h-5 w-5 text-gray-400" />}
-        />
-        <Input
-          label="New Password"
-          type="password"
-          placeholder="Password"
-          rightIcon={<EyeOff className="h-5 w-5 text-gray-400" />}
-        />
-        <Input
-          label="Confirm Password"
-          type="password"
-          placeholder="Confirm new password"
-          rightIcon={<EyeOff className="h-5 w-5 text-gray-400" />}
-        />
+        <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5">
+          <h4 className="text-base font-semibold text-neutral-800">Password</h4>
+          <Input
+            label="Current Password"
+            type={showCurrentPassword ? "text" : "password"}
+            placeholder="Password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            rightIcon={
+              showCurrentPassword ? (
+                <Eye className="h-5 w-5 text-gray-400" />
+              ) : (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              )
+            }
+            onRightIconClick={() =>
+              setShowCurrentPassword((current) => !current)
+            }
+            rightIconAriaLabel="Toggle current password visibility"
+          />
+          <Input
+            label="New Password"
+            type={showNewPassword ? "text" : "password"}
+            placeholder="Password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            rightIcon={
+              showNewPassword ? (
+                <Eye className="h-5 w-5 text-gray-400" />
+              ) : (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              )
+            }
+            onRightIconClick={() => setShowNewPassword((current) => !current)}
+            rightIconAriaLabel="Toggle new password visibility"
+          />
+          <Input
+            label="Confirm Password"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            rightIcon={
+              showConfirmPassword ? (
+                <Eye className="h-5 w-5 text-gray-400" />
+              ) : (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              )
+            }
+            onRightIconClick={() =>
+              setShowConfirmPassword((current) => !current)
+            }
+            rightIconAriaLabel="Toggle confirm password visibility"
+          />
+        </div>
 
-        <Button colorScheme="primary" size="md">
-          Change Password
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            colorScheme="gray"
+            size="md"
+            isLoading={sendOtpMutation.isPending}
+            onClick={() => sendOtpMutation.mutate()}
+          >
+            Send OTP
+          </Button>
+        </div>
       </div>
+
+      {isOtpModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <div className="mb-4">
+              <h4 className="text-lg font-semibold text-neutral-800">
+                Confirm OTP
+              </h4>
+              <p className="mt-1 text-sm text-gray-600">
+                Enter OTP sent to your email to confirm password change.
+              </p>
+            </div>
+
+            <Input
+              label="OTP"
+              placeholder="6-digit OTP"
+              value={otp}
+              onChange={(event) => setOtp(event.target.value)}
+            />
+
+            <div className="mt-5 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                colorScheme="gray"
+                onClick={() => {
+                  setIsOtpModalOpen(false);
+                  setOtp("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                colorScheme="primary"
+                isLoading={updateSensitiveMutation.isPending}
+                onClick={handleUpdateSensitive}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

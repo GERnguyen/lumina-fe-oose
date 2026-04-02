@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import env from "../env";
+import { useAuthStore } from "../stores/useAuthStore";
 
 export const ACCESS_TOKEN_KEY = env.accessToken;
 
@@ -27,8 +28,7 @@ axiosClient.interceptors.response.use(
   (response) => response.data,
   (error: AxiosError<{ message?: string }>) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      window.dispatchEvent(new Event("auth:logout"));
+      useAuthStore.getState().logout();
     }
 
     return Promise.reject(error);

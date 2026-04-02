@@ -1,83 +1,28 @@
 import { ChevronDown, Search } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import CourseProgressCard, {
   type CourseProgressCardProps,
 } from "../../components/CourseProgressCard";
 import Input from "../../components/ui/Input";
 import Pagination from "../../components/ui/Pagination";
-
-const myCourses: CourseProgressCardProps[] = [
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Learn Ethical Hacking From Scratch",
-    currentLecture: "31. Learn More About Web Design",
-    progressPercentage: 0,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "SQL for NEWBS: Weekender Crash Course",
-    currentLecture: "165. Font Properties Challenge 3",
-    progressPercentage: 2,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Complete Adobe Lightroom Megacourse",
-    currentLecture: "7. Adding Content to Our Website",
-    progressPercentage: 0,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Machine Learning A-Z: Hands-On Python & R",
-    currentLecture: "651. CSS Font Property Challenge Solution",
-    progressPercentage: 23,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Ultimate Google Ads Training 2020",
-    currentLecture: "1. Introductions",
-    progressPercentage: 0,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Instagram Marketing 2021",
-    currentLecture: "54. CSS Static and Relative Positioning",
-    progressPercentage: 52,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Automate the Boring Stuff with Python",
-    currentLecture: "3. Absolute positioning",
-    progressPercentage: 34,
-  },
-  {
-    imageUrl:
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=1200&auto=format&fit=crop",
-    courseTitle: "Digital Marketing Masterclass - 23 Courses in 1",
-    currentLecture: "6. Learn More About Typography",
-    progressPercentage: 51,
-  },
-];
+import { useMyLearningCourses } from "../../hooks/queries";
 
 interface SelectFieldProps {
   label: string;
   options: string[];
+  value: string;
+  onChange: (value: string) => void;
 }
 
-function SelectField({ label, options }: SelectFieldProps) {
+function SelectField({ label, options, value, onChange }: SelectFieldProps) {
   return (
     <label className="w-full space-y-2">
       <span className="text-xs font-normal text-gray-500">{label}</span>
       <div className="relative">
         <select
           className="h-12 w-full appearance-none rounded-lg bg-white px-4 pr-10 text-base text-gray-600 outline outline-1 outline-gray-200 outline-offset-[-1px] transition focus:outline-2 focus:outline-primary-500"
-          defaultValue={options[0]}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -92,13 +37,122 @@ function SelectField({ label, options }: SelectFieldProps) {
 }
 
 export default function StudentCourses() {
+  const {
+    data: learningCourses = [],
+    isLoading,
+    isError,
+  } = useMyLearningCourses();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchValue, setSearchValue] = useState("");
+  const [sortBy, setSortBy] = useState("Latest");
+  const [statusFilter, setStatusFilter] = useState("All Courses");
+  const [progressFilter, setProgressFilter] = useState("All");
+  const pageSize = 8;
+
+  const mappedCourses = useMemo<CourseProgressCardProps[]>(
+    () =>
+      learningCourses.map((course) => ({
+        courseId: course.courseId,
+        imageUrl: course.image ?? "https://placehold.co/600x400",
+        courseTitle: course.title,
+        currentLecture: "Continue learning",
+        progressPercentage: Number(course.progressPercentage) || 0,
+      })),
+    [learningCourses],
+  );
+
+  const filteredCourses = useMemo(() => {
+    const keyword = searchValue.trim().toLowerCase();
+
+    const bySearch = mappedCourses.filter((course) =>
+      course.courseTitle.toLowerCase().includes(keyword),
+    );
+
+    const byStatus = bySearch.filter((course) => {
+      if (statusFilter === "In Progress") {
+        return course.progressPercentage > 0 && course.progressPercentage < 100;
+      }
+
+      if (statusFilter === "Not Started") {
+        return course.progressPercentage === 0;
+      }
+
+      if (statusFilter === "Completed") {
+        return course.progressPercentage >= 100;
+      }
+
+      return true;
+    });
+
+    const byProgress = byStatus.filter((course) => {
+      if (progressFilter === "0-25%") {
+        return (
+          course.progressPercentage >= 0 && course.progressPercentage <= 25
+        );
+      }
+
+      if (progressFilter === "26-75%") {
+        return (
+          course.progressPercentage >= 26 && course.progressPercentage <= 75
+        );
+      }
+
+      if (progressFilter === "76-100%") {
+        return course.progressPercentage >= 76;
+      }
+
+      return true;
+    });
+
+    const sorted = [...byProgress];
+    if (sortBy === "A-Z") {
+      sorted.sort((left, right) =>
+        left.courseTitle.localeCompare(right.courseTitle),
+      );
+    } else if (sortBy === "Progress") {
+      sorted.sort(
+        (left, right) => right.progressPercentage - left.progressPercentage,
+      );
+    }
+
+    return sorted;
+  }, [mappedCourses, progressFilter, searchValue, sortBy, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / pageSize));
+  const paginatedCourses = useMemo(
+    () =>
+      filteredCourses.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+      ),
+    [currentPage, filteredCourses],
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortBy(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleProgressChange = (value: string) => {
+    setProgressFilter(value);
+    setCurrentPage(1);
+  };
 
   return (
     <section className="space-y-8">
       <h2 className="text-3xl leading-8 text-neutral-800">
         <span className="font-semibold">Courses </span>
-        <span className="font-normal">(957)</span>
+        <span className="font-normal">({filteredCourses.length})</span>
       </h2>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr_1fr] lg:items-end lg:gap-6">
@@ -107,37 +161,62 @@ export default function StudentCourses() {
           <Input
             placeholder="Search in your courses..."
             leftIcon={<Search className="h-4 w-4" />}
+            value={searchValue}
+            onChange={(event) => handleSearchChange(event.target.value)}
           />
         </div>
 
-        <SelectField label="Sort by:" options={["Latest", "Oldest", "A-Z"]} />
+        <SelectField
+          label="Sort by:"
+          options={["Latest", "A-Z", "Progress"]}
+          value={sortBy}
+          onChange={handleSortChange}
+        />
         <SelectField
           label="Status:"
           options={["All Courses", "In Progress", "Not Started", "Completed"]}
+          value={statusFilter}
+          onChange={handleStatusChange}
         />
         <SelectField
-          label="Teacher:"
-          options={[
-            "All Teachers",
-            "Kevin Gilbert",
-            "Dianne Russell",
-            "Robert Fox",
-          ]}
+          label="Progress:"
+          options={["All", "0-25%", "26-75%", "76-100%"]}
+          value={progressFilter}
+          onChange={handleProgressChange}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {myCourses.map((course) => (
-          <CourseProgressCard
-            key={`${course.courseTitle}-${course.currentLecture}`}
-            {...course}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-72 animate-pulse rounded-xl bg-gray-100"
+            />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="rounded-xl border border-danger-200 bg-danger-50 p-5 text-danger-700">
+          Unable to load your courses.
+        </div>
+      ) : paginatedCourses.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white p-8 text-sm text-gray-600">
+          No courses matched your filter.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {paginatedCourses.map((course) => (
+            <CourseProgressCard
+              key={`${course.courseTitle}-${course.imageUrl}`}
+              {...course}
+            />
+          ))}
+        </div>
+      )}
 
       <Pagination
         currentPage={currentPage}
-        totalPages={5}
+        totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
     </section>

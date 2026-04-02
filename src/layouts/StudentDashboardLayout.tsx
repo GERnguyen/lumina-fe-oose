@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Button from "../components/ui/Button";
+import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/cn";
 
 const tabs = [
@@ -13,6 +14,11 @@ const tabs = [
 ];
 
 export default function StudentDashboardLayout() {
+  const { user } = useAuth();
+  const displayName =
+    user?.profile?.fullName ?? user?.fullName ?? user?.email ?? "Student";
+  const avatarUrl = user?.profile?.avatar || "https://placehold.co/110x110";
+
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-800">
       <Header />
@@ -24,29 +30,19 @@ export default function StudentDashboardLayout() {
               <div className="flex items-center gap-4 sm:gap-6">
                 <img
                   className="h-20 w-20 rounded-full object-cover sm:h-28 sm:w-28"
-                  src="https://placehold.co/110x110"
-                  alt="Kevin Gilbert"
+                  src={avatarUrl}
+                  alt={`${displayName} avatar`}
                 />
                 <div className="space-y-2">
                   <h1 className="text-2xl font-semibold text-neutral-800">
-                    Kevin Gilbert
+                    {displayName}
                   </h1>
-                  <p className="text-base text-gray-500">
-                    Web Designer & Best-Selling Instructor
-                  </p>
                   <div className="flex items-center gap-3 text-gray-600 md:hidden">
                     <BellDot className="h-5 w-5" />
                     <Heart className="h-5 w-5" />
                     <ShoppingCart className="h-5 w-5" />
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <Button variant="outline" colorScheme="primary" size="lg">
-                  Become Instructor
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
               </div>
             </div>
 

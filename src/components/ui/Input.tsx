@@ -6,10 +6,25 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  onRightIconClick?: () => void;
+  rightIconAriaLabel?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, leftIcon, rightIcon, id, ...props }, ref) => {
+  (
+    {
+      className,
+      label,
+      error,
+      leftIcon,
+      rightIcon,
+      onRightIconClick,
+      rightIconAriaLabel,
+      id,
+      ...props
+    },
+    ref,
+  ) => {
     const inputId = id ?? React.useId();
     const hasLeftIcon = Boolean(leftIcon);
     const hasRightIcon = Boolean(rightIcon);
@@ -49,9 +64,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
 
           {hasRightIcon ? (
-            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-              {rightIcon}
-            </div>
+            onRightIconClick ? (
+              <button
+                type="button"
+                onClick={onRightIconClick}
+                aria-label={rightIconAriaLabel ?? "Toggle input icon action"}
+                className="absolute inset-y-0 right-2 flex items-center rounded px-1 text-gray-500 transition hover:text-neutral-700"
+              >
+                {rightIcon}
+              </button>
+            ) : (
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                {rightIcon}
+              </div>
+            )
           ) : null}
         </div>
 

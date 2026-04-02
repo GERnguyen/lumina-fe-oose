@@ -1,5 +1,7 @@
 import { BookOpen, LogOut, PlusCircle } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/cn";
 
 const menuItems = [
@@ -12,6 +14,16 @@ const menuItems = [
 ];
 
 export default function InstructorLayout() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    queryClient.clear();
+    navigate("/sign-in", { replace: true });
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50 text-neutral-800">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between bg-neutral-800 text-gray-400 lg:flex">
@@ -55,6 +67,7 @@ export default function InstructorLayout() {
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />
             Sign-out
