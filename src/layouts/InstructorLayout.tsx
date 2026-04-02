@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, PlusCircle } from "lucide-react";
+import { BookOpen, LogOut, PlusCircle, Settings } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import luminaLogo from "../assets/lumina.svg";
@@ -12,6 +12,7 @@ const menuItems = [
     icon: PlusCircle,
   },
   { label: "My Courses", to: "/instructor/courses", icon: BookOpen, end: true },
+  { label: "Settings", to: "/instructor/settings", icon: Settings },
 ];
 
 export default function InstructorLayout() {

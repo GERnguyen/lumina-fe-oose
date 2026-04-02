@@ -38,7 +38,7 @@ function extractErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export default function StudentSettings() {
+export default function InstructorSettings() {
   const queryClient = useQueryClient();
   const { token, setAuth } = useAuth();
 
@@ -204,7 +204,7 @@ export default function StudentSettings() {
   };
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-10 px-4 py-6 sm:px-6 lg:px-10">
       {toast ? (
         <div className="fixed right-4 top-4 z-50 w-[min(92vw,460px)]">
           <Alert
@@ -216,7 +216,7 @@ export default function StudentSettings() {
       ) : null}
 
       <h2 className="text-2xl font-semibold text-neutral-800">
-        Account settings
+        Instructor settings
       </h2>
 
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start">

@@ -21,6 +21,7 @@ import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import BasicInformation from "./pages/instructor/CreateCourseBasic";
 import CreateCourseCurriculum from "./pages/instructor/CreateCourseCurriculum";
+import InstructorSettings from "./pages/instructor/InstructorSettings";
 import ManageCourse from "./pages/instructor/ManageCourse";
 import InstructorMyCourses from "./pages/instructor/MyCourses";
 import DashboardOverview from "./pages/student/DashboardOverview";
@@ -82,6 +83,7 @@ function App() {
           <Route path="/instructor" element={<InstructorLayout />}>
             <Route index element={<Navigate to="courses" replace />} />
             <Route path="courses" element={<InstructorMyCourses />} />
+            <Route path="settings" element={<InstructorSettings />} />
             <Route path="courses/:courseId/manage" element={<ManageCourse />} />
             <Route path="create-course" element={<CreateCourseLayout />}>
               <Route index element={<Navigate to="basic" replace />} />
