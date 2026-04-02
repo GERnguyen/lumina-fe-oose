@@ -80,6 +80,10 @@ interface ApiCourse {
   reviewCount?: number | string;
   enrollment_count?: number | string;
   enrollmentCount?: number | string;
+  isActive?: boolean;
+  is_active?: boolean;
+  publishedAt?: string;
+  published_at?: string;
   instructor?: ApiInstructor;
   category?: ApiCategory;
   sections?: ApiSection[];
@@ -269,6 +273,8 @@ function normalizeCourse(item: ApiCourse): Course {
     average_rating: toNumber(item.average_rating ?? item.averageRating),
     review_count: toNumber(item.review_count ?? item.reviewCount),
     enrollment_count: toNumber(item.enrollment_count ?? item.enrollmentCount),
+    is_active: Boolean(item.isActive ?? item.is_active),
+    published_at: item.publishedAt ?? item.published_at ?? "",
     instructor: normalizeInstructor(item.instructor),
     category: normalizeCategory(item.category),
     sections: (item.sections ?? [])
@@ -406,6 +412,10 @@ const courseService = {
     );
 
     return normalizeCourse(response);
+  },
+
+  async deleteInstructorCourse(courseId: number): Promise<void> {
+    await axiosClient.delete(`/instructor/courses/${courseId}`);
   },
 
   async getInstructorCourseStudents(

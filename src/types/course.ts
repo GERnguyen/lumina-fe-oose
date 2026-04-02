@@ -42,6 +42,8 @@ export interface Course {
   average_rating: number;
   review_count: number;
   enrollment_count: number;
+  is_active?: boolean;
+  published_at?: string;
   instructor: Instructor;
   category: Category;
   sections?: CourseSection[];

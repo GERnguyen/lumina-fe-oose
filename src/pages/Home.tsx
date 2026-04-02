@@ -23,15 +23,18 @@ import {
 import { useAuth } from "../hooks/useAuth";
 import type { Course } from "../types/course";
 
-// Mapping category names to icons
-const categoryIconMap: Record<string, LucideIcon> = {
-  development: Monitor,
-  business: Briefcase,
-  design: Palette,
-  "health & fitness": Dumbbell,
-  productivity: GraduationCap,
-  photography: PlayCircle,
-};
+const categoryCardIcons: LucideIcon[] = [
+  Monitor,
+  Briefcase,
+  Palette,
+  Dumbbell,
+  GraduationCap,
+  PlayCircle,
+];
+
+const categoryCardTones: Array<
+  "primary" | "secondary" | "success" | "warning" | "danger" | "gray"
+> = ["secondary", "success", "warning", "primary", "danger", "gray"];
 
 // Loading skeleton component
 function CourseSkeleton() {
@@ -92,6 +95,17 @@ function SponsorsSection() {
 
 function TopCategoriesSection() {
   const { data: categoriesData, isLoading } = useCategories();
+  const topCategories = useMemo(
+    () =>
+      [...(categoriesData ?? [])]
+        .sort((left, right) => {
+          const leftCount = left.courseCount ?? 0;
+          const rightCount = right.courseCount ?? 0;
+          return rightCount - leftCount;
+        })
+        .slice(0, 6),
+    [categoriesData],
+  );
 
   return (
     <section className="bg-white py-16">
@@ -112,25 +126,11 @@ function TopCategoriesSection() {
                   <div className="h-32 rounded-lg bg-gray-200" />
                 </div>
               ))
-            : categoriesData?.map((category) => {
-                const iconName = category.name.toLowerCase();
+            : topCategories.map((category, index) => {
                 const icon =
-                  categoryIconMap[iconName] || categoryIconMap.development;
-                const toneMap: Record<string, string> = {
-                  development: "secondary",
-                  business: "success",
-                  design: "warning",
-                  health: "success",
-                  productivity: "gray",
-                  photography: "primary",
-                };
+                  categoryCardIcons[index % categoryCardIcons.length];
                 const tone =
-                  (toneMap[iconName] as
-                    | "secondary"
-                    | "success"
-                    | "warning"
-                    | "gray"
-                    | "primary") || "secondary";
+                  categoryCardTones[index % categoryCardTones.length];
 
                 return (
                   <Link
@@ -215,52 +215,9 @@ function FeaturedCoursesSection() {
 }
 
 function InstructorCTASection() {
-  const steps = [
-    "Apply to become instructor",
-    "Build and edit your profile",
-    "Create your first course",
-    "Start teaching and earning",
-  ];
-
   return (
     <section className="bg-slate-50 py-16">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
-        <article className="rounded-xl bg-neutral-800 p-8 text-white">
-          <h3 className="text-3xl font-semibold">Become an instructor</h3>
-          <p className="mt-3 max-w-md text-sm text-gray-300">
-            Instructors from around the world teach millions of students on
-            Cinx. Share your expertise and grow with us.
-          </p>
-          <div className="mt-6">
-            <Button
-              variant="outline"
-              colorScheme="gray"
-              className="border-white/40 text-white hover:bg-white/10"
-            >
-              Start teaching
-            </Button>
-          </div>
-        </article>
-
-        <article className="rounded-xl border border-gray-200 bg-white p-8">
-          <h3 className="text-3xl font-semibold text-neutral-800">
-            Your teaching steps
-          </h3>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {steps.map((step, index) => (
-              <div
-                key={step}
-                className="flex items-start gap-3 rounded-lg bg-gray-50 p-4"
-              >
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700">
-                  {index + 1}
-                </span>
-                <p className="text-sm text-neutral-800">{step}</p>
-              </div>
-            ))}
-          </div>
-        </article>
-      </div>
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8"></div>
     </section>
   );
 }

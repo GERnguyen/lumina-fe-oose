@@ -60,6 +60,16 @@ export default function AdminDashboard() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (courseId: number) =>
+      adminService.deletePendingCourse(courseId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "pending-courses"],
+      });
+    },
+  });
+
   const users = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
   const pendingCourses = useMemo(
     () => pendingCoursesQuery.data ?? [],
@@ -239,11 +249,23 @@ export default function AdminDashboard() {
                       colorScheme="primary"
                       size="sm"
                       onClick={() => approveMutation.mutate(course.id)}
-                      disabled={approveMutation.isPending}
+                      disabled={
+                        approveMutation.isPending || deleteMutation.isPending
+                      }
                     >
                       {approveMutation.isPending
                         ? "Đang duyệt..."
                         : "Duyệt khóa học"}
+                    </Button>
+                    <Button
+                      colorScheme="danger"
+                      size="sm"
+                      onClick={() => deleteMutation.mutate(course.id)}
+                      disabled={
+                        approveMutation.isPending || deleteMutation.isPending
+                      }
+                    >
+                      {deleteMutation.isPending ? "Đang xóa..." : "Xóa"}
                     </Button>
                   </div>
                 </div>

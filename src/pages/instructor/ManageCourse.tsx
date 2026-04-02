@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import { useAuth } from "../../hooks/useAuth";
 import { useCategories } from "../../hooks/queries/useCategories";
 import courseService from "../../services/course.service";
 
@@ -75,6 +76,7 @@ function mapQuestions(
 export default function ManageCourse() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const categoriesQuery = useCategories();
   const numericCourseId = Number(courseId);
 
@@ -342,6 +344,36 @@ export default function ManageCourse() {
     },
   });
 
+  const deletePendingMutation = useMutation({
+    mutationFn: () => courseService.deleteInstructorCourse(numericCourseId),
+    onSuccess: () => {
+      navigate("/instructor/courses", { replace: true });
+    },
+    onError: (error: unknown) => {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "object" &&
+        error.response.data !== null &&
+        "message" in error.response.data &&
+        typeof (error.response as { data?: { message?: unknown } }).data
+          ?.message === "string"
+      ) {
+        setErrorMessage(
+          (error.response as { data?: { message?: string } }).data?.message ||
+            "Failed to delete course.",
+        );
+        return;
+      }
+
+      setErrorMessage("Failed to delete course.");
+    },
+  });
+
   const saveChanges = () => {
     const errors = validationErrors();
     if (errors.length > 0) {
@@ -354,19 +386,38 @@ export default function ManageCourse() {
     saveMutation.mutate();
   };
 
+  const normalizedRole = user?.role?.trim().toLowerCase();
+  const canDeletePending =
+    (normalizedRole === "admin" || normalizedRole === "instructor") &&
+    courseQuery.data?.is_active === false;
+
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-neutral-800">
           Manage Course
         </h1>
-        <Button
-          variant="outline"
-          colorScheme="gray"
-          onClick={() => navigate("/instructor/courses")}
-        >
-          Back to My Courses
-        </Button>
+        <div className="flex items-center gap-2">
+          {canDeletePending ? (
+            <Button
+              colorScheme="danger"
+              onClick={() => deletePendingMutation.mutate()}
+              disabled={deletePendingMutation.isPending}
+            >
+              {deletePendingMutation.isPending
+                ? "Deleting..."
+                : "Delete Pending Course"}
+            </Button>
+          ) : null}
+
+          <Button
+            variant="outline"
+            colorScheme="gray"
+            onClick={() => navigate("/instructor/courses")}
+          >
+            Back to My Courses
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 rounded-xl border border-gray-200 bg-white p-2">

@@ -119,6 +119,10 @@ const adminService = {
   async approveCourse(courseId: number): Promise<void> {
     await axiosClient.patch(`/admin/courses/${courseId}/approve`);
   },
+
+  async deletePendingCourse(courseId: number): Promise<void> {
+    await axiosClient.delete(`/admin/courses/${courseId}`);
+  },
 };
 
 export default adminService;
