@@ -92,6 +92,88 @@ interface ApiPaginatedCourseResponse {
   limit?: number;
 }
 
+interface CreateCoursePayload {
+  title: string;
+  slug: string;
+  description: string;
+  thumbnailUrl?: string;
+  categoryId: number;
+  price?: number;
+  tags?: string[];
+}
+
+interface CreateSectionPayload {
+  title: string;
+  orderIndex: number;
+}
+
+interface UpdateSectionPayload {
+  title: string;
+  orderIndex: number;
+}
+
+interface CreateLecturePayload {
+  title: string;
+  contentText: string;
+  orderIndex: number;
+}
+
+interface UpdateLecturePayload {
+  title: string;
+  contentText: string;
+  orderIndex: number;
+}
+
+interface CreateQuizPayload {
+  title: string;
+}
+
+interface UpdateQuizPayload {
+  title: string;
+}
+
+interface CreateAnswerPayload {
+  content: string;
+  isCorrect: boolean;
+}
+
+interface CreateQuestionPayload {
+  content: string;
+  answers: CreateAnswerPayload[];
+}
+
+interface UpdateQuestionPayload {
+  content: string;
+  answers: Array<{
+    id?: number;
+    content: string;
+    isCorrect: boolean;
+  }>;
+}
+
+interface InstructorStudent {
+  enrollmentId: number;
+  progressPercent: number;
+  enrolledAt: string;
+  completedAt?: string;
+  student: {
+    id: number;
+    email: string;
+    fullName: string | null;
+    avatar: string | null;
+  };
+}
+
+interface UpdateInstructorCoursePayload {
+  title: string;
+  slug: string;
+  description?: string;
+  thumbnailUrl?: string;
+  categoryId?: number;
+  price?: number;
+  tags?: string[];
+}
+
 function getAssetBaseUrl(): string {
   return env.apiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
 }
@@ -249,6 +331,124 @@ const courseService = {
       "/courses/top-discounted",
     );
     return response.map(normalizeCourse);
+  },
+
+  async createCourse(payload: CreateCoursePayload): Promise<Course> {
+    const response = await axiosClient.post<ApiCourse, ApiCourse>(
+      "/courses",
+      payload,
+    );
+
+    return normalizeCourse(response);
+  },
+
+  async createSection(
+    courseId: number,
+    payload: CreateSectionPayload,
+  ): Promise<{ id: number }> {
+    return axiosClient.post<{ id: number }, { id: number }>(
+      `/instructor/courses/${courseId}/sections`,
+      payload,
+    );
+  },
+
+  async createLecture(
+    sectionId: number,
+    payload: CreateLecturePayload,
+  ): Promise<{ id: number }> {
+    return axiosClient.post<{ id: number }, { id: number }>(
+      `/instructor/sections/${sectionId}/lectures`,
+      payload,
+    );
+  },
+
+  async createQuiz(
+    sectionId: number,
+    payload: CreateQuizPayload,
+  ): Promise<{ id: number }> {
+    return axiosClient.post<{ id: number }, { id: number }>(
+      `/instructor/sections/${sectionId}/quizzes`,
+      payload,
+    );
+  },
+
+  async createQuestion(
+    quizId: number,
+    payload: CreateQuestionPayload,
+  ): Promise<{ id: number }> {
+    return axiosClient.post<{ id: number }, { id: number }>(
+      `/instructor/quizzes/${quizId}/questions`,
+      payload,
+    );
+  },
+
+  async getMyInstructorCourses(): Promise<Course[]> {
+    const response = await axiosClient.get<ApiCourse[], ApiCourse[]>(
+      "/instructor/courses/my-courses",
+    );
+    return response.map(normalizeCourse);
+  },
+
+  async updateInstructorCourse(
+    courseId: number,
+    payload: UpdateInstructorCoursePayload,
+  ): Promise<Course> {
+    const response = await axiosClient.put<ApiCourse, ApiCourse>(
+      `/instructor/courses/${courseId}`,
+      payload,
+    );
+
+    return normalizeCourse(response);
+  },
+
+  async getInstructorCourseStudents(
+    courseId: number,
+  ): Promise<InstructorStudent[]> {
+    return axiosClient.get<InstructorStudent[], InstructorStudent[]>(
+      `/instructor/courses/${courseId}/students`,
+    );
+  },
+
+  async getInstructorQuizQuestions(quizId: number): Promise<
+    Array<{
+      id: number;
+      content: string;
+      answers: Array<{ id: number; content: string; isCorrect: boolean }>;
+    }>
+  > {
+    return axiosClient.get(`/instructor/quizzes/${quizId}/questions`);
+  },
+
+  async updateSection(sectionId: number, payload: UpdateSectionPayload) {
+    return axiosClient.put(`/instructor/sections/${sectionId}`, payload);
+  },
+
+  async deleteSection(sectionId: number) {
+    return axiosClient.delete(`/instructor/sections/${sectionId}`);
+  },
+
+  async updateLecture(lectureId: number, payload: UpdateLecturePayload) {
+    return axiosClient.put(`/instructor/lectures/${lectureId}`, payload);
+  },
+
+  async deleteLecture(lectureId: number) {
+    return axiosClient.delete(`/instructor/lectures/${lectureId}`);
+  },
+
+  async updateQuiz(quizId: number, payload: UpdateQuizPayload) {
+    return axiosClient.put(`/instructor/quizzes/${quizId}`, payload);
+  },
+
+  async deleteQuiz(quizId: number) {
+    return axiosClient.delete(`/instructor/quizzes/${quizId}`);
+  },
+
+  async updateQuestion(quizQuestionId: number, payload: UpdateQuestionPayload) {
+    return axiosClient.put(`/instructor/questions/${quizQuestionId}`, payload);
+  },
+
+  async deleteQuestion(quizQuestionId: number) {
+    return axiosClient.delete(`/instructor/questions/${quizQuestionId}`);
   },
 };
 

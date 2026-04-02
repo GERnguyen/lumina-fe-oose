@@ -171,9 +171,6 @@ export default function Courses() {
                       <Filter className="h-4 w-4" />
                       Filter
                     </span>
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded bg-primary-500 px-1.5 text-xs font-semibold text-white">
-                      {activeFilterCount}
-                    </span>
                   </Button>
                 </div>
 

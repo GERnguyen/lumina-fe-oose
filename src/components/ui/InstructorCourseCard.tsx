@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "../../utils/cn";
 
 export interface InstructorCourseCardProps {
+  courseId: number;
   imageUrl: string;
   title: string;
   category: string;
@@ -17,6 +18,7 @@ export interface InstructorCourseCardProps {
   originalPrice?: number;
   rating: number;
   students: number;
+  onManageCourse?: (courseId: number) => void;
 }
 
 const categoryToneStyles: Record<
@@ -31,7 +33,14 @@ const categoryToneStyles: Record<
   gray: "bg-gray-50 text-gray-800",
 };
 
+const vndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
 export default function InstructorCourseCard({
+  courseId,
   imageUrl,
   title,
   category,
@@ -40,9 +49,15 @@ export default function InstructorCourseCard({
   originalPrice,
   rating,
   students,
+  onManageCourse,
 }: InstructorCourseCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const formattedPrice = vndFormatter.format(price);
+  const formattedOriginalPrice =
+    typeof originalPrice === "number"
+      ? vndFormatter.format(originalPrice)
+      : null;
 
   useEffect(() => {
     function onClickOutside(event: MouseEvent) {
@@ -95,11 +110,11 @@ export default function InstructorCourseCard({
         >
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold text-primary-500">
-              ${price.toFixed(2)}
+              {formattedPrice}
             </span>
-            {originalPrice ? (
+            {formattedOriginalPrice ? (
               <span className="text-sm text-gray-400 line-through">
-                ${originalPrice.toFixed(2)}
+                {formattedOriginalPrice}
               </span>
             ) : null}
           </div>
@@ -117,7 +132,11 @@ export default function InstructorCourseCard({
             <div className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
               <button
                 type="button"
-                className="w-full bg-orange-500 px-4 py-2 text-left text-sm font-medium text-white"
+                onClick={() => {
+                  setIsOpen(false);
+                  onManageCourse?.(courseId);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-orange-500 hover:text-white"
               >
                 View Details
               </button>
@@ -126,12 +145,6 @@ export default function InstructorCourseCard({
                 className="w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50"
               >
                 Edit Course
-              </button>
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50"
-              >
-                Delete Course
               </button>
             </div>
           ) : null}

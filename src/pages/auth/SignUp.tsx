@@ -1,4 +1,4 @@
-import { ArrowRight, Eye, EyeOff, ShieldCheck, X } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, X } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState } from "react";
@@ -328,7 +328,6 @@ export default function SignUp() {
                   isLoading={sendOtpMutation.isPending}
                 >
                   Send OTP
-                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </form>

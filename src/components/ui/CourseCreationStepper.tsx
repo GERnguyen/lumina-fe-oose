@@ -1,4 +1,4 @@
-import { BookOpen, Check, Layers3, Send } from "lucide-react";
+import { BookOpen, Check, Send } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../../utils/cn";
 
@@ -9,18 +9,8 @@ const steps = [
     icon: BookOpen,
   },
   {
-    label: "Advance Information",
-    to: "/instructor/create-course/advance",
-    icon: Layers3,
-  },
-  {
     label: "Curriculum",
     to: "/instructor/create-course/curriculum",
-    icon: Send,
-  },
-  {
-    label: "Publish Course",
-    to: "/instructor/create-course/publish",
     icon: Send,
   },
 ];

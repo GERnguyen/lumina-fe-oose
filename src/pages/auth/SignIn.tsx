@@ -1,4 +1,4 @@
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -143,7 +143,6 @@ export default function SignIn() {
                   disabled={isPending}
                 >
                   {isPending ? "Signing In..." : "Sign In"}
-                  {!isPending && <ArrowRight className="h-4 w-4" />}
                 </Button>
               </div>
             </form>

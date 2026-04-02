@@ -1,19 +1,26 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Button from "../components/ui/Button";
 import CourseCreationStepper from "../components/ui/CourseCreationStepper";
+import {
+  isBasicDraftComplete,
+  useCreateCourseDraftStore,
+} from "../stores/useCreateCourseDraftStore";
 
 const titles: Record<string, string> = {
   basic: "Basic Information",
-  advance: "Advance Information",
   curriculum: "Course Curriculum",
-  publish: "Publish Course",
 };
 
 export default function CreateCourseLayout() {
   const location = useLocation();
+  const basic = useCreateCourseDraftStore((state) => state.basic);
   const currentStep = location.pathname.split("/").pop() ?? "basic";
 
   if (location.pathname === "/instructor/create-course") {
+    return <Navigate to="basic" replace />;
+  }
+
+  if (currentStep === "curriculum" && !isBasicDraftComplete(basic)) {
     return <Navigate to="basic" replace />;
   }
 

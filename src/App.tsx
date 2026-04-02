@@ -19,9 +19,8 @@ import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import BasicInformation from "./pages/instructor/CreateCourseBasic";
-import AdvanceInformation from "./pages/instructor/AdvanceInformation";
 import CreateCourseCurriculum from "./pages/instructor/CreateCourseCurriculum";
-import CreateCoursePublish from "./pages/instructor/CreateCoursePublish";
+import ManageCourse from "./pages/instructor/ManageCourse";
 import InstructorMyCourses from "./pages/instructor/MyCourses";
 import DashboardOverview from "./pages/student/DashboardOverview";
 import StudentCourses from "./pages/student/StudentCourses";
@@ -74,12 +73,11 @@ function App() {
           <Route path="/instructor" element={<InstructorLayout />}>
             <Route index element={<Navigate to="courses" replace />} />
             <Route path="courses" element={<InstructorMyCourses />} />
+            <Route path="courses/:courseId/manage" element={<ManageCourse />} />
             <Route path="create-course" element={<CreateCourseLayout />}>
               <Route index element={<Navigate to="basic" replace />} />
               <Route path="basic" element={<BasicInformation />} />
-              <Route path="advance" element={<AdvanceInformation />} />
               <Route path="curriculum" element={<CreateCourseCurriculum />} />
-              <Route path="publish" element={<CreateCoursePublish />} />
             </Route>
           </Route>
           <Route path="/student" element={<StudentDashboardLayout />}>

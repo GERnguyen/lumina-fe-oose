@@ -25,10 +25,14 @@ function formatOrderDate(value?: string): string {
 
 export default function StudentPurchaseHistory() {
   const { data: myOrders = [], isLoading, isError } = useMyOrders();
+  const paidOrders = useMemo(
+    () => myOrders.filter((order) => order.status === "PAID"),
+    [myOrders],
+  );
 
   const orderHistory = useMemo<OrderItem[]>(
     () =>
-      myOrders.map((order) => ({
+      paidOrders.map((order) => ({
         id: `order-${order.id}`,
         date: formatOrderDate(order.paid_at),
         totalCourses: order.order_details.length,
@@ -42,7 +46,7 @@ export default function StudentPurchaseHistory() {
           imageUrl: detail.course.thumbnail_url,
         })),
       })),
-    [myOrders],
+    [paidOrders],
   );
 
   return (

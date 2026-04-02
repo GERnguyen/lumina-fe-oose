@@ -1,5 +1,4 @@
 import { Globe, MessageCircle, Music, Rss, Share } from "lucide-react";
-import Button from "./ui/Button";
 
 const links = {
   "Top Categories": [
@@ -16,32 +15,10 @@ export default function Footer() {
   return (
     <footer className="bg-neutral-800 text-white">
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-16 sm:px-6 lg:px-8">
-        <section className="flex flex-col justify-between gap-8 rounded-xl border border-gray-700/60 bg-neutral-800 p-8 lg:flex-row lg:items-center">
-          <div className="space-y-3">
-            <h2 className="max-w-2xl text-3xl font-semibold leading-tight">
-              Start learning with students around the world.
-            </h2>
-            <p className="text-sm text-gray-400">
-              Build practical skills with curated courses and expert
-              instructors.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button colorScheme="primary">Join the family</Button>
-            <Button
-              variant="ghost"
-              colorScheme="gray"
-              className="text-white hover:bg-white/10"
-            >
-              Browse all courses
-            </Button>
-          </div>
-        </section>
-
         <section className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">
           <div className="space-y-6">
             <div className="space-y-2">
-              <h3 className="text-2xl font-semibold">Cinx E-tutor</h3>
+              <h3 className="text-2xl font-semibold">Lumina</h3>
               <p className="max-w-md text-sm text-gray-400">
                 Learn from top mentors and launch your next milestone with a
                 modern online classroom experience.

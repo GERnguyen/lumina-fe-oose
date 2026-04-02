@@ -1,6 +1,7 @@
 import { BookOpen, LogOut, PlusCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import luminaLogo from "../assets/lumina.svg";
 import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/cn";
 
@@ -30,10 +31,10 @@ export default function InstructorLayout() {
         <div>
           <div className="flex h-16 items-center border-b border-white/10 px-6">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-500 text-white">
-                <BookOpen className="h-5 w-5" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg text-white">
+                <img src={luminaLogo} alt="Lumina logo" className="h-8 w-8" />
               </div>
-              <span className="text-2xl font-semibold text-white">E-tutor</span>
+              <span className="text-2xl font-semibold text-white">Lumina</span>
             </div>
           </div>
 

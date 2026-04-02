@@ -1,8 +1,7 @@
-import { ArrowRight, BellDot, Heart, ShoppingCart } from "lucide-react";
+import { BellDot, Heart, ShoppingCart } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import Button from "../components/ui/Button";
 import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/cn";
 
