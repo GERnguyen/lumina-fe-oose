@@ -461,6 +461,12 @@ export default function CourseDetail() {
                               review.createdAt,
                             ).toLocaleDateString(),
                             comment: review.comment || "No comment provided",
+                            instructorReply: review.instructorReply,
+                            instructorReplyTime: review.instructorRepliedAt
+                              ? new Date(
+                                  review.instructorRepliedAt,
+                                ).toLocaleString()
+                              : undefined,
                           }}
                         />
                       ))

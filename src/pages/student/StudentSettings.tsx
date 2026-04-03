@@ -51,10 +51,8 @@ export default function StudentSettings() {
   const [newPassword, setNewPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const profileQuery = useQuery({
@@ -145,7 +143,6 @@ export default function StudentSettings() {
         setAuth(updatedUser, token);
       }
 
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setOtp("");

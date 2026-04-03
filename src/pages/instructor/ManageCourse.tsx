@@ -1,12 +1,13 @@
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { useAuth } from "../../hooks/useAuth";
 import { useCategories } from "../../hooks/queries/useCategories";
 import courseService from "../../services/course.service";
+import reviewService from "../../services/review.service";
 
 type TabKey = "students" | "content";
 
@@ -77,6 +78,7 @@ export default function ManageCourse() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const categoriesQuery = useCategories();
   const numericCourseId = Number(courseId);
 
@@ -90,6 +92,7 @@ export default function ManageCourse() {
   const [price, setPrice] = useState(0);
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [sections, setSections] = useState<SectionDraft[]>([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
 
   const courseQuery = useQuery({
     queryKey: ["instructor", "course-detail", numericCourseId],
@@ -100,6 +103,12 @@ export default function ManageCourse() {
   const studentsQuery = useQuery({
     queryKey: ["instructor", "course-students", numericCourseId],
     queryFn: () => courseService.getInstructorCourseStudents(numericCourseId),
+    enabled: Number.isFinite(numericCourseId) && numericCourseId > 0,
+  });
+
+  const reviewsQuery = useQuery({
+    queryKey: ["course-reviews", numericCourseId],
+    queryFn: () => reviewService.getCourseReviews(numericCourseId),
     enabled: Number.isFinite(numericCourseId) && numericCourseId > 0,
   });
 
@@ -175,6 +184,23 @@ export default function ManageCourse() {
       })),
     );
   }, [courseQuery.data, questionsQueries.data]);
+
+  useEffect(() => {
+    const reviews = reviewsQuery.data?.data ?? [];
+    if (reviews.length === 0) {
+      return;
+    }
+
+    setReplyDrafts((current) => {
+      const next = { ...current };
+      for (const review of reviews) {
+        if (next[review.id] === undefined) {
+          next[review.id] = review.instructorReply ?? "";
+        }
+      }
+      return next;
+    });
+  }, [reviewsQuery.data]);
 
   const validationErrors = (): string[] => {
     const errors: string[] = [];
@@ -374,6 +400,47 @@ export default function ManageCourse() {
     },
   });
 
+  const replyMutation = useMutation({
+    mutationFn: ({
+      reviewId,
+      replyComment,
+    }: {
+      reviewId: number;
+      replyComment: string;
+    }) => reviewService.replyToReviewAsInstructor(reviewId, { replyComment }),
+    onSuccess: async () => {
+      setErrorMessage("");
+      setSuccessMessage("Reply saved successfully.");
+      await queryClient.invalidateQueries({
+        queryKey: ["course-reviews", numericCourseId],
+      });
+    },
+    onError: (error: unknown) => {
+      setSuccessMessage("");
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "object" &&
+        error.response.data !== null &&
+        "message" in error.response.data &&
+        typeof (error.response as { data?: { message?: unknown } }).data
+          ?.message === "string"
+      ) {
+        setErrorMessage(
+          (error.response as { data?: { message?: string } }).data?.message ||
+            "Failed to save reply.",
+        );
+        return;
+      }
+
+      setErrorMessage("Failed to save reply.");
+    },
+  });
+
   const saveChanges = () => {
     const errors = validationErrors();
     if (errors.length > 0) {
@@ -384,6 +451,18 @@ export default function ManageCourse() {
 
     setErrorMessage("");
     saveMutation.mutate();
+  };
+
+  const submitReply = (reviewId: number) => {
+    const replyComment = (replyDrafts[reviewId] ?? "").trim();
+    if (!replyComment) {
+      setSuccessMessage("");
+      setErrorMessage("Reply content is required.");
+      return;
+    }
+
+    setErrorMessage("");
+    replyMutation.mutate({ reviewId, replyComment });
   };
 
   const normalizedRole = user?.role?.trim().toLowerCase();
@@ -466,6 +545,76 @@ export default function ManageCourse() {
               </p>
             </div>
           ))}
+
+          <div className="mt-2 space-y-3 rounded-lg border border-gray-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-neutral-800">
+              Student Reviews
+            </h3>
+
+            {reviewsQuery.isLoading ? (
+              <p className="text-sm text-gray-500">Loading reviews...</p>
+            ) : null}
+
+            {!reviewsQuery.isLoading &&
+            (reviewsQuery.data?.data ?? []).length === 0 ? (
+              <p className="text-sm text-gray-500">No reviews yet.</p>
+            ) : null}
+
+            {(reviewsQuery.data?.data ?? []).map((review) => (
+              <div
+                key={review.id}
+                className="space-y-3 rounded-lg border border-gray-200 bg-white p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-neutral-800">
+                    {review.user.profile.fullName || "Anonymous"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <p className="text-sm text-gray-700">
+                  {review.comment || "No comment"}
+                </p>
+
+                <label className="space-y-1.5">
+                  <span className="block text-xs font-semibold text-gray-500">
+                    Instructor Reply
+                  </span>
+                  <textarea
+                    className="h-24 w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-primary-500"
+                    placeholder="Write your reply to this review..."
+                    value={replyDrafts[review.id] ?? ""}
+                    onChange={(event) =>
+                      setReplyDrafts((current) => ({
+                        ...current,
+                        [review.id]: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                {review.instructorRepliedAt ? (
+                  <p className="text-xs text-gray-500">
+                    Last replied:{" "}
+                    {new Date(review.instructorRepliedAt).toLocaleString()}
+                  </p>
+                ) : null}
+
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    colorScheme="primary"
+                    isLoading={replyMutation.isPending}
+                    onClick={() => submitReply(review.id)}
+                  >
+                    Save Reply
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       ) : (
         <section className="space-y-5 rounded-xl border border-gray-200 bg-white p-4">

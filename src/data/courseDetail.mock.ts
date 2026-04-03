@@ -20,6 +20,8 @@ export interface ReviewItem {
   rating: number;
   comment: string;
   avatarUrl: string;
+  instructorReply?: string;
+  instructorReplyTime?: string;
 }
 
 export interface InstructorItem {

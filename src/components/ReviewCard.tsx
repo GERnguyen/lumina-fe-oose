@@ -33,6 +33,22 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         </div>
 
         <p className="text-sm leading-6 text-gray-600">{review.comment}</p>
+
+        {review.instructorReply ? (
+          <div className="rounded-lg border border-primary-100 bg-primary-50 px-3 py-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">
+              Instructor Reply
+            </p>
+            <p className="mt-1 text-sm leading-6 text-primary-900">
+              {review.instructorReply}
+            </p>
+            {review.instructorReplyTime ? (
+              <p className="mt-1 text-xs text-primary-700">
+                {review.instructorReplyTime}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </article>
   );

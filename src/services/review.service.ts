@@ -5,6 +5,10 @@ interface ApiReview {
   id?: number;
   rating?: number | string;
   comment?: string;
+  instructorReply?: string;
+  instructor_reply?: string;
+  instructorRepliedAt?: string;
+  instructor_replied_at?: string;
   createdAt?: string;
   created_at?: string;
   user?: {
@@ -37,6 +41,10 @@ export interface SubmitReviewPayload {
   comment?: string;
 }
 
+export interface ReplyReviewPayload {
+  replyComment: string;
+}
+
 function toNumber(value: number | string | undefined): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -59,6 +67,9 @@ function normalizeReview(item: ApiReview): CourseReview {
     id: toNumber(item.id),
     rating: toNumber(item.rating),
     comment: item.comment ?? "",
+    instructorReply: item.instructorReply ?? item.instructor_reply,
+    instructorRepliedAt:
+      item.instructorRepliedAt ?? item.instructor_replied_at ?? undefined,
     createdAt: item.createdAt ?? item.created_at ?? "",
     user: {
       id: toNumber(item.user?.id),
@@ -97,6 +108,13 @@ const reviewService = {
 
   submitReview: async (payload: SubmitReviewPayload): Promise<void> => {
     await axiosClient.post("/reviews", payload);
+  },
+
+  replyToReviewAsInstructor: async (
+    reviewId: number,
+    payload: ReplyReviewPayload,
+  ): Promise<void> => {
+    await axiosClient.patch(`/instructor/reviews/${reviewId}/reply`, payload);
   },
 };
 

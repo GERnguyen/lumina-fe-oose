@@ -54,6 +54,8 @@ export interface CourseReview {
   rating: number;
   comment: string;
   createdAt: string;
+  instructorReply?: string;
+  instructorRepliedAt?: string;
   user: {
     id: number;
     email: string;
