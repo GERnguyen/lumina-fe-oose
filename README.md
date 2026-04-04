@@ -1,4 +1,4 @@
-# Cinx E-learning Frontend
+# Lumina Frontend
 
 Frontend web application for the Lumina (Cinx) e-learning platform, integrated with the backend API.
 The product focuses on a full learning marketplace experience across student, instructor, and admin roles.
@@ -32,10 +32,7 @@ This frontend is built to support production-like workflows rather than static m
 - Instructor workspace (course management, enrolled students, settings, review replies)
 - Admin dashboard (user management and course moderation)
 
-## Demo Gallery (Replace with Your Media)
-
-Add screenshots/GIFs to make this README portfolio-ready.
-Recommended folder: `fe/docs/media/`
+## Demo Gallery
 
 ### 1) Product hero
 
