@@ -39,44 +39,25 @@ Recommended folder: `fe/docs/media/`
 
 ### 1) Product hero
 
-Replace with your homepage full-width preview:
-
-```md
 ![Lumina Home Hero](docs/media/home-hero.png)
-```
 
 ### 2) Authentication flow (GIF)
 
-Replace with login/register interaction:
-
-```md
 ![Authentication Flow](docs/media/auth-flow.png)
-```
 
 ### 3) Student experience
 
-Replace with course detail and learning progress:
 
-```md
 ![Student Course Detail](docs/media/student-course-detail.png)
 ![Student Learning Progress](docs/media/student-learning-progress.png)
-```
 
 ### 4) Instructor workspace (GIF)
 
-Replace with manage course and review reply flow:
-
-```md
 ![Instructor Manage Course](docs/media/instructor-manage-course.png)
-```
 
 ### 5) Admin dashboard
 
-Replace with moderation and user tabs:
-
-```md
 ![Admin Dashboard](docs/media/admin-dashboard.png)
-```
 
 ## Role-based Experience
 
