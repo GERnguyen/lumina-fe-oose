@@ -34,11 +34,11 @@ This frontend is built to support production-like workflows rather than static m
 
 ## Demo Gallery
 
-### 1) Product hero
+### 1) Courses List
 
 ![Lumina Home Hero](docs/media/home-hero.png)
 
-### 2) Authentication flow (GIF)
+### 2) Authentication flow
 
 ![Authentication Flow](docs/media/auth-flow.png)
 
@@ -48,7 +48,7 @@ This frontend is built to support production-like workflows rather than static m
 ![Student Course Detail](docs/media/student-course-detail.png)
 ![Student Learning Progress](docs/media/student-learning-progress.png)
 
-### 4) Instructor workspace (GIF)
+### 4) Instructor workspace 
 
 ![Instructor Manage Course](docs/media/instructor-manage-course.png)
 
@@ -86,6 +86,10 @@ Role guards and post-login redirects are applied to keep each experience isolate
 Primary data flow:
 
 `Page -> Hook/Query -> Service -> Axios -> Backend API`.
+
+## Backend repo
+
+https://github.com/GERnguyen/lumina-be
 
 ## App Flows
 
