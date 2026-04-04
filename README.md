@@ -1,73 +1,112 @@
-# React + TypeScript + Vite
+# Cinx E-learning Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web app cho nen tang hoc truc tuyen Lumina (Cinx), ket noi truc tiep voi backend API.
+Muc tieu la cung cap trai nghiem hoc tap, ban khoa hoc, va quan tri noi dung theo role.
 
-Currently, two official plugins are available:
+## Project Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Ung dung FE bao gom cac nhom chuc nang:
 
-## React Compiler
+- Kham pha khoa hoc: home, category, course detail, search/sort/filter.
+- Authentication: sign in, sign up, profile, OTP flow.
+- Student area: purchase history, learning progress, review course.
+- Instructor area: my courses, manage content, enrolled users, settings, reply review.
+- Admin area: quan ly users, duyet khoa hoc pending.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Role-based Experience
 
-## Expanding the ESLint configuration
+- `student`: mua va hoc khoa hoc, xem lich su giao dich, danh gia.
+- `instructor`: quan ly khoa hoc, cap nhat noi dung, theo doi hoc vien.
+- `admin`: moderation va quan tri tai khoan/he thong.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Route guard va post-login redirect duoc xu ly theo role de tranh truy cap sai khu vuc.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- React 19 + TypeScript
+- Vite
+- React Router
+- TanStack Query (React Query)
+- Zustand
+- Tailwind CSS
+- Axios
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Frontend Architecture
+
+- `src/pages`: page-level screens theo domain.
+- `src/components`: UI components tai su dung.
+- `src/layouts`: layout theo role (student/instructor/admin).
+- `src/services`: API client theo resource.
+- `src/hooks`: custom hooks va query hooks.
+- `src/types`: contract types cho du lieu.
+
+Flow du lieu chinh:
+
+`Page -> Hook/Query -> Service -> Axios -> Backend API`.
+
+## Key Product Flows
+
+### Course discovery
+
+1. User vao trang home, xem category noi bat.
+2. Filter/sort danh sach khoa hoc.
+3. Vao course detail de xem curriculum va reviews.
+
+### Instructor operations
+
+1. Instructor tao/chinh sua noi dung khoa hoc.
+2. Theo doi danh sach hoc vien da enroll.
+3. Reply truc tiep vao review cua student trong trang manage course.
+
+### Admin moderation
+
+1. Admin vao dashboard rieng.
+2. Xem user theo role.
+3. Approve/remove khoa hoc dang pending.
+
+## Environment
+
+Tao file `.env` trong thu muc `fe/`:
+
+```env
+VITE_API_URL=http://localhost:9090/api
+VITE_ACCESS_TOKEN_KEY=accessToken
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Setup and Run
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1) Install dependencies
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+### 2) Start dev server
+
+```bash
+npm run dev
+```
+
+Mac dinh FE chay o `http://localhost:5173`.
+
+Luu y: backend can chay truoc de FE goi API thanh cong.
+
+## Build and Preview
+
+```bash
+npm run build
+npm run preview
+```
+
+## Scripts
+
+- `npm run dev`: chay app o che do development.
+- `npm run build`: type-check + bundle production.
+- `npm run preview`: preview ban build local.
+- `npm run lint`: lint source code.
+
+## Integration Notes
+
+- FE phu thuoc vao API contract cua repo backend (`be`).
+- Neu backend doi shape response, can cap nhat layer `services` va `types` tuong ung.
+- Cac duong dan auth va role guard la thanh phan quan trong de dam bao dung nghiep vu.
