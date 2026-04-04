@@ -1,25 +1,90 @@
 # Cinx E-learning Frontend
 
-Frontend web app cho nen tang hoc truc tuyen Lumina (Cinx), ket noi truc tiep voi backend API.
-Muc tieu la cung cap trai nghiem hoc tap, ban khoa hoc, va quan tri noi dung theo role.
+Frontend web application for the Lumina (Cinx) e-learning platform, integrated with the backend API.
+The product focuses on a full learning marketplace experience across student, instructor, and admin roles.
 
-## Project Overview
+## Table of Contents
 
-Ung dung FE bao gom cac nhom chuc nang:
+- [Project Vision](#project-vision)
+- [Feature Highlights](#feature-highlights)
+- [Demo Gallery (Replace with Your Media)](#demo-gallery-replace-with-your-media)
+- [Role-Based Experience](#role-based-experience)
+- [Tech Stack](#tech-stack)
+- [Frontend Architecture](#frontend-architecture)
+- [App Flows](#app-flows)
+- [Environment](#environment)
+- [Setup and Run](#setup-and-run)
+- [Build and Preview](#build-and-preview)
+- [Scripts](#scripts)
+- [API Integration Notes](#api-integration-notes)
 
-- Kham pha khoa hoc: home, category, course detail, search/sort/filter.
-- Authentication: sign in, sign up, profile, OTP flow.
-- Student area: purchase history, learning progress, review course.
-- Instructor area: my courses, manage content, enrolled users, settings, reply review.
-- Admin area: quan ly users, duyet khoa hoc pending.
+## Project Vision
+
+Lumina is designed as a practical learning ecosystem where users can discover, purchase, and complete online courses while instructors manage high-quality content and admins moderate platform quality.
+
+This frontend is built to support production-like workflows rather than static mock pages.
+
+## Feature Highlights
+
+- Course discovery and exploration (categories, filtering, sorting, detail pages)
+- Authentication and profile management
+- Student learning journey (enrollment, progress, purchase history, reviews)
+- Instructor workspace (course management, enrolled students, settings, review replies)
+- Admin dashboard (user management and course moderation)
+
+## Demo Gallery (Replace with Your Media)
+
+Add screenshots/GIFs to make this README portfolio-ready.
+Recommended folder: `fe/docs/media/`
+
+### 1) Product hero
+
+Replace with your homepage full-width preview:
+
+```md
+![Lumina Home Hero](docs/media/home-hero.png)
+```
+
+### 2) Authentication flow (GIF)
+
+Replace with login/register interaction:
+
+```md
+![Authentication Flow](docs/media/auth-flow.png)
+```
+
+### 3) Student experience
+
+Replace with course detail and learning progress:
+
+```md
+![Student Course Detail](docs/media/student-course-detail.png)
+![Student Learning Progress](docs/media/student-learning-progress.png)
+```
+
+### 4) Instructor workspace (GIF)
+
+Replace with manage course and review reply flow:
+
+```md
+![Instructor Manage Course](docs/media/instructor-manage-course.png)
+```
+
+### 5) Admin dashboard
+
+Replace with moderation and user tabs:
+
+```md
+![Admin Dashboard](docs/media/admin-dashboard.png)
+```
 
 ## Role-based Experience
 
-- `student`: mua va hoc khoa hoc, xem lich su giao dich, danh gia.
-- `instructor`: quan ly khoa hoc, cap nhat noi dung, theo doi hoc vien.
-- `admin`: moderation va quan tri tai khoan/he thong.
+- `student`: browse, purchase, learn, and review courses.
+- `instructor`: create and maintain courses, track learners, reply to reviews.
+- `admin`: moderate users and approve pending courses.
 
-Route guard va post-login redirect duoc xu ly theo role de tranh truy cap sai khu vuc.
+Role guards and post-login redirects are applied to keep each experience isolated and secure.
 
 ## Tech Stack
 
@@ -33,40 +98,40 @@ Route guard va post-login redirect duoc xu ly theo role de tranh truy cap sai kh
 
 ## Frontend Architecture
 
-- `src/pages`: page-level screens theo domain.
-- `src/components`: UI components tai su dung.
-- `src/layouts`: layout theo role (student/instructor/admin).
-- `src/services`: API client theo resource.
-- `src/hooks`: custom hooks va query hooks.
-- `src/types`: contract types cho du lieu.
+- `src/pages`: domain-based page screens.
+- `src/components`: reusable UI components.
+- `src/layouts`: role-specific layout shells.
+- `src/services`: API service layer.
+- `src/hooks`: custom hooks and query hooks.
+- `src/types`: shared API/data contracts.
 
-Flow du lieu chinh:
+Primary data flow:
 
 `Page -> Hook/Query -> Service -> Axios -> Backend API`.
 
-## Key Product Flows
+## App Flows
 
 ### Course discovery
 
-1. User vao trang home, xem category noi bat.
-2. Filter/sort danh sach khoa hoc.
-3. Vao course detail de xem curriculum va reviews.
+1. User lands on Home and explores top categories.
+2. User filters and sorts course listings.
+3. User opens course details (curriculum + reviews).
 
 ### Instructor operations
 
-1. Instructor tao/chinh sua noi dung khoa hoc.
-2. Theo doi danh sach hoc vien da enroll.
-3. Reply truc tiep vao review cua student trong trang manage course.
+1. Instructor updates course structure and content.
+2. Instructor tracks enrolled learners and progress.
+3. Instructor replies to student reviews from the manage course page.
 
 ### Admin moderation
 
-1. Admin vao dashboard rieng.
-2. Xem user theo role.
-3. Approve/remove khoa hoc dang pending.
+1. Admin accesses the dedicated admin dashboard.
+2. Admin reviews users by role.
+3. Admin approves or removes pending courses.
 
 ## Environment
 
-Tao file `.env` trong thu muc `fe/`:
+Create a `.env` file in the `fe` directory:
 
 ```env
 VITE_API_URL=http://localhost:9090/api
@@ -87,9 +152,9 @@ npm install
 npm run dev
 ```
 
-Mac dinh FE chay o `http://localhost:5173`.
+Frontend runs on `http://localhost:5173` by default.
 
-Luu y: backend can chay truoc de FE goi API thanh cong.
+Note: backend should be running before frontend for API requests to work.
 
 ## Build and Preview
 
@@ -100,13 +165,13 @@ npm run preview
 
 ## Scripts
 
-- `npm run dev`: chay app o che do development.
-- `npm run build`: type-check + bundle production.
-- `npm run preview`: preview ban build local.
+- `npm run dev`: start development server.
+- `npm run build`: type-check and build production bundle.
+- `npm run preview`: preview production build locally.
 - `npm run lint`: lint source code.
 
-## Integration Notes
+## API Integration Notes
 
-- FE phu thuoc vao API contract cua repo backend (`be`).
-- Neu backend doi shape response, can cap nhat layer `services` va `types` tuong ung.
-- Cac duong dan auth va role guard la thanh phan quan trong de dam bao dung nghiep vu.
+- Frontend depends on backend API contracts from the `be` repository.
+- When backend response shapes change, update `src/services` and `src/types` accordingly.
+- Auth routes and role guards are core to business correctness and access control.
