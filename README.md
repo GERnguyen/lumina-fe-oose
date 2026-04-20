@@ -34,9 +34,6 @@ This frontend is built to support production-like workflows rather than static m
 
 ## Demo Gallery 
 
-Add screenshots/GIFs to make this README portfolio-ready.
-Recommended folder: `fe/docs/media/`
-
 ### 1) Product hero
 
 ![Lumina Home Hero](docs/media/home-hero.png)
