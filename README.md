@@ -32,7 +32,7 @@ This frontend is built to support production-like workflows rather than static m
 - Instructor workspace (course management, enrolled students, settings, review replies)
 - Admin dashboard (user management and course moderation)
 
-## Demo Gallery (Replace with Your Media)
+## Demo Gallery 
 
 Add screenshots/GIFs to make this README portfolio-ready.
 Recommended folder: `fe/docs/media/`
